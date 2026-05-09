@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Eucalyptus • Мессенджер с тегами</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --bg-primary: #1e2c1f;
+      --bg-secondary: #2a3a2b;
+      --bg-card: #344e35;
+      --bg-input: #2d422e;
+      --text-primary: #e8f0e3;
+      --text-secondary: #b8ccb0;
+      --accent: #8fbc8f;
+      --accent-hover: #7aab7a;
+      --accent-text: #0d1f0d;
+      --border: #4a6449;
+      --like-active: #c97b84;
+      --error: #e8a0a0;
+      --tag-bg: #3a5539;
+      --tag-active: #5a8a59;
+      --popular-gradient: linear-gradient(135deg, #3d5530, #4a6240);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: #121a13;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 600px;
+      background: var(--bg-primary);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .hidden { display: none !important; }
+
+    h2, h3 { color: var(--text-primary); font-weight: 600; }
+
+    input, textarea, button {
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 15px;
+      outline: none;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      background: #354f35;
+    }
+
+    button {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 12px;
+    }
+
+    button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    button:active { transform: scale(0.97); }
+
+    button.secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+    }
+
+    button.danger { background: #5c3333; color: #f0d0d0; border: 2px solid #7a4040; }
+
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .post {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .post.popular {
+      background: var(--popular-gradient);
+      border: 2px solid var(--accent);
+      box-shadow: 0 4px 15px rgba(143, 188, 143, 0.1);
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .username-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .username { font-weight: 700; color: var(--accent); }
+
+    .verified-badge {
+      width: 18px;
+      height: 18px;
+      image-rendering: crisp-edges;
+    }
+
+    .post-text {
+      font-size: 16px;
+      margin: 12px 0;
+      word-break: break-word;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .tag {
+      background: var(--tag-bg);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag:hover {
+      background: var(--tag-active);
+      border-color: var(--accent);
+    }
+
+    .tag.active-tag {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .tag-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .tag-input-wrapper input {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+
+    .tag-input-wrapper button {
+      width: auto;
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .like-btn {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .like-btn:hover { background: #3d553d; }
+    .like-btn.liked { background: var(--like-active); border-color: var(--like-active); color: white; }
+
+    .popular-badge {
+      position: absolute;
+      top: -8px;
+      right: 16px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .post-stats {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .tabs button {
+      flex: 1;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+    }
+
+    .tabs button.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .filter-bar {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .filter-bar label {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    hr { border-color: var(--border); margin: 16px 0; }
+
+    .error { color: var(--error); font-size: 14px; }
+    .success { color: var(--accent); font-size: 14px; }
+
+    .settings-section { margin-bottom: 16px; }
+    .settings-section label {
+      display: block;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: 24px;
+      padding: 28px;
+      width: 90%;
+      max-width: 450px;
+      border: 2px solid var(--border);
+    }
+
+    .tag-suggestions {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .suggestion-tag {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="auth-screen">
+    <h2 style="text-align: center; margin-bottom: 20px;">🐨 koalagram</h2>
+    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+      любите почитать? вам сюда!
+    </p>
+    <div id="login-form">
+      <input type="text" id="login-username" placeholder="Юзернейм" autocomplete="off" maxlength="30">
+      <input type="password" id="login-password" placeholder="Пароль" style="margin-top: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+        <input type="checkbox" id="remember-me" style="width: auto;">
+        <label for="remember-me" style="color: var(--text-secondary); font-size: 14px;">Запомнить меня</label>
+      </div>
+      <button id="login-btn" style="margin-top: 14px;">Войти</button>
+      <p style="margin-top: 14px; text-align: center; color: var(--text-secondary);">
+        Нет аккаунта?
+        <a href="#" id="show-register" style="color: var(--accent); margin-left: 4px;">Зарегистрироваться</a>
+      </p>
+    </div>
+    <div id="register-form" class="hidden">
+      <input type="text" id="reg-name" placeholder="Ваше имя (отображается)">
+      <input type="text" id="reg-username" placeholder="Уникальный юзернейм (a-z, 0-9, _)" style="margin-top: 10px;" maxlength="20">
+      <input type="password" id="reg-password" placeholder="Пароль (мин. 6 символов)" style="margin-top: 10px;">
+      <button id="register-btn" style="margin-top: 14px;">Создать аккаунт</button>
+      <p style="margin-top: 14px; text-align: center; color: var(--text-secondary);">
+        <a href="#" id="show-login" style="color: var(--accent);">Войти</a>
+      </p>
+      <p style="font-size: 12px; color: #6b8569; margin-top: 8px;">
+        ⚠ Юзернейм: только латиница, цифры и _
+      </p>
+    </div>
+    <p id="auth-error" class="error" style="text-align: center;"></p>
+  </div>
+
+  <div id="main-screen" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <h3 id="current-user-display"></h3>
+        <img id="current-verified-badge" class="verified-badge hidden" src="verification.png" alt="✓" style="width: 20px; height: 20px;">
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button id="settings-btn" class="secondary" style="width: auto; padding: 8px 14px;">⚙️</button>
+        <button id="logout-btn" class="secondary" style="width: auto; padding: 8px 14px;">Выйти</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="tab-feed" class="active">🐨 Лента</button>
+      <button id="tab-profile">👤 Мой профиль</button>
+      <button id="tab-users">🌐 Люди</button>
+    </div>
+
+    <div id="feed-section">
+      <div class="filter-bar">
+        <label>🔍 Фильтр по тегам</label>
+        <div id="filter-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+          <span class="tag active-tag" data-tag="__all__">Все посты</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="filter-tag-input" placeholder="Введите тег для фильтрации..." style="flex:1; padding: 8px 12px; font-size: 14px;">
+          <button id="filter-tag-btn" style="width: auto; padding: 8px 16px; font-size: 14px;">Фильтр</button>
+        </div>
+        <button id="clear-filter-btn" class="secondary" style="margin-top: 8px; width: 100%; padding: 8px;">Очистить фильтр</button>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <textarea id="new-post-text" placeholder="Что нового?" rows="3" style="resize: none;"></textarea>
+        <div class="tag-input-wrapper">
+          <input type="text" id="new-post-tags" placeholder="Теги через запятую (например: природа, эвкалипт)" style="font-size: 14px;">
+          <button id="add-tag-suggestion-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">💡</button>
+        </div>
+        <div id="tag-suggestions" class="tag-suggestions"></div>
+        <button id="send-post-btn" style="margin-top: 12px;">Опубликовать</button>
+      </div>
+
+      <div id="feed-posts"></div>
+    </div>
+
+    <div id="profile-section" class="hidden">
+      <div id="profile-info" class="card" style="margin-bottom: 12px;">Загрузка...</div>
+      <div id="profile-posts"></div>
+    </div>
+
+    <div id="users-section" class="hidden">
+      <div id="users-list" class="card">Загрузка пользователей...</div>
+    </div>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom: 20px;">⚙️ Настройки профиля</h3>
+      <div class="settings-section">
+        <label>Изменить имя</label>
+        <input type="text" id="settings-name" placeholder="Новое имя">
+        <button id="save-name-btn" style="margin-top: 8px;">Сохранить имя</button>
+        <p id="name-status" class="success"></p>
+      </div>
+      <div class="settings-section">
+        <label>Изменить юзернейм</label>
+        <input type="text" id="settings-username" placeholder="Новый юзернейм" maxlength="20">
+        <button id="save-username-btn" style="margin-top: 8px;">Сохранить юзернейм</button>
+        <p id="username-status" class="success"></p>
+      </div>
+      <div class="settings-section">
+        <label>Сменить пароль</label>
+        <input type="password" id="settings-old-password" placeholder="Текущий пароль">
+        <input type="password" id="settings-new-password" placeholder="Новый пароль (мин. 6)" style="margin-top: 8px;">
+        <button id="save-password-btn" style="margin-top: 8px;">Обновить пароль</button>
+        <p id="password-status" class="success"></p>
+      </div>
+      <button id="close-settings-btn" class="secondary" style="margin-top: 12px;">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAU4opyTFmHt7LsSC2ue8y4S4T_rtWYBOo",
+    authDomain: "pixelbattle-a085d.firebaseapp.com",
+    databaseURL: "https://pixelbattle-a085d-default-rtdb.firebaseio.com",
+    projectId: "pixelbattle-a085d",
+    storageBucket: "pixelbattle-a085d.firebasestorage.app",
+    messagingSenderId: "704091500505",
+    appId: "1:704091500505:web:bbf90758b48b056cad73c8"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let currentUser = null;
+  let currentFilterTag = '__all__';
+  let allPopularTags = new Set();
+
+  const authScreen = document.getElementById('auth-screen');
+  const mainScreen = document.getElementById('main-screen');
+  const authError = document.getElementById('auth-error');
+  const settingsModal = document.getElementById('settings-modal');
+  const currentUserDisplay = document.getElementById('current-user-display');
+  const currentVerifiedBadge = document.getElementById('current-verified-badge');
+  const feedSection = document.getElementById('feed-section');
+  const profileSection = document.getElementById('profile-section');
+  const usersSection = document.getElementById('users-section');
+  const feedPostsDiv = document.getElementById('feed-posts');
+  const profilePostsDiv = document.getElementById('profile-posts');
+  const profileInfoDiv = document.getElementById('profile-info');
+  const usersListDiv = document.getElementById('users-list');
+  const newPostText = document.getElementById('new-post-text');
+  const newPostTags = document.getElementById('new-post-tags');
+  const filterTagsDiv = document.getElementById('filter-tags');
+
+  const VALID_USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
+  const VALID_TAG_REGEX = /^[a-zA-Zа-яА-Я0-9_ёЁ]+$/;
+
+  function showElement(el) { el.classList.remove('hidden'); }
+  function hideElement(el) { el.classList.add('hidden'); }
+
+  function escapeHtml(text) {
+    return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function generateUid(username) {
+    return username + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+  }
+
+  function parseTags(tagString) {
+    if (!tagString || !tagString.trim()) return [];
+    return tagString.split(',')
+      .map(t => t.trim().toLowerCase().replace(/\s+/g, '_'))
+      .filter(t => t.length >= 2 && t.length <= 30 && VALID_TAG_REGEX.test(t))
+      .slice(0, 5);
+  }
+
+  function normalizeTag(tag) {
+    return tag.toLowerCase().replace(/\s+/g, '_');
+  }
+
+  function getTodayStartTimestamp() {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now.getTime();
+  }
+
+  function saveToLocalStorage(userData) {
+    localStorage.setItem('koalagram_user', JSON.stringify({
+      uid: userData.uid,
+      username: userData.username,
+      password: userData.password,
+      name: userData.name
+    }));
+  }
+
+  function removeFromLocalStorage() {
+    localStorage.removeItem('koalagram_user');
+  }
+
+  function getFromLocalStorage() {
+    const data = localStorage.getItem('koalagram_user');
+    return data ? JSON.parse(data) : null;
+  }
+
+  async function checkVerification(uid) {
+    const snap = await db.ref(`users/${uid}/verification`).once('value');
+    return snap.val() === true;
+  }
+
+  function updateVerifiedBadge(verified) {
+    verified ? currentVerifiedBadge.classList.remove('hidden') : currentVerifiedBadge.classList.add('hidden');
+  }
+
+  async function checkUsernameExists(username, excludeUid = null) {
+    const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) return false;
+    if (!excludeUid) return true;
+    let exists = false;
+    snapshot.forEach(child => { if (child.key !== excludeUid) exists = true; });
+    return exists;
+  }
+
+  async function registerUser(name, username, password) {
+    if (!VALID_USERNAME_REGEX.test(username) || username.length < 3) {
+      return { error: 'Юзернейм: только латиница, цифры и _, от 3 символов' };
+    }
+    if (await checkUsernameExists(username)) return { error: 'Юзернейм занят' };
+    const uid = generateUid(username);
+    const userData = { uid, name: name.trim(), username: username.trim(), password, verification: false };
+    await db.ref('users/' + uid).set(userData);
+    saveToLocalStorage(userData);
+    return { success: true, user: userData };
+  }
+
+  async function loginUser(username, password, rememberMe = false) {
+    const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) return { error: 'Неверный юзернейм или пароль' };
+    let user = null;
+    snapshot.forEach(child => { const u = child.val(); if (u.password === password) user = u; });
+    if (!user) return { error: 'Неверный юзернейм или пароль' };
+    if (rememberMe) saveToLocalStorage(user);
+    return { success: true, user };
+  }
+
+  async function updateUserName(newName) {
+    await db.ref(`users/${currentUser.uid}/name`).set(newName.trim());
+    currentUser.name = newName.trim();
+    saveToLocalStorage(currentUser);
+  }
+
+  async function updateUsername(newUsername) {
+    if (!VALID_USERNAME_REGEX.test(newUsername)) return { error: 'Неверный формат юзернейма' };
+    if (await checkUsernameExists(newUsername, currentUser.uid)) return { error: 'Юзернейм занят' };
+    const updates = {};
+    updates[`users/${currentUser.uid}/username`] = newUsername;
+    const postsSnap = await db.ref('posts').orderByChild('userId').equalTo(currentUser.uid).once('value');
+    if (postsSnap.exists()) {
+      postsSnap.forEach(child => { updates[`posts/${child.key}/userUsername`] = newUsername; });
+    }
+    await db.ref().update(updates);
+    currentUser.username = newUsername;
+    saveToLocalStorage(currentUser);
+    return { success: true };
+  }
+
+  async function updatePassword(oldPass, newPass) {
+    if (oldPass !== currentUser.password) return { error: 'Неверный текущий пароль' };
+    if (newPass.length < 6) return { error: 'Новый пароль минимум 6 символов' };
+    await db.ref(`users/${currentUser.uid}/password`).set(newPass);
+    currentUser.password = newPass;
+    saveToLocalStorage(currentUser);
+    return { success: true };
+  }
+
+  function createPost(text, tagsArray) {
+    const postRef = db.ref('posts').push();
+    const post = {
+      id: postRef.key,
+      text: text.trim(),
+      tags: tagsArray,
+      userId: currentUser.uid,
+      userName: currentUser.name,
+      userUsername: currentUser.username,
+      timestamp: firebase.database.ServerValue.TIMESTAMP,
+      likes: {}
+    };
+    return postRef.set(post);
+  }
+
+  async function toggleLike(postId) {
+    if (!currentUser) return;
+    const likeRef = db.ref(`posts/${postId}/likes/${currentUser.uid}`);
+    const snap = await likeRef.once('value');
+    snap.exists() ? await likeRef.remove() : await likeRef.set(true);
+  }
+
+  async function renderPosts(postsObj, container, filterTag = '__all__') {
+    container.innerHTML = '';
+    if (!postsObj) {
+      container.innerHTML = '<p style="color:#6b8569;">Пока нет постов.</p>';
+      return;
+    }
+
+    let entries = Object.entries(postsObj);
+    const todayStart = getTodayStartTimestamp();
+
+    entries = entries.map(([id, post]) => {
+      const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+      const isToday = post.timestamp >= todayStart;
+      return { id, post, likesCount, isToday };
+    });
+
+    if (filterTag !== '__all__') {
+      entries = entries.filter(({ post }) => post.tags && post.tags.includes(filterTag.toLowerCase()));
+    }
+
+    if (entries.length === 0) {
+      container.innerHTML = '<p style="color:#6b8569;">Нет постов с таким тегом.</p>';
+      return;
+    }
+
+    const todayPosts = entries.filter(e => e.isToday);
+    const otherPosts = entries.filter(e => !e.isToday);
+
+    todayPosts.sort((a, b) => {
+      if (b.likesCount !== a.likesCount) return b.likesCount - a.likesCount;
+      return (b.post.timestamp || 0) - (a.post.timestamp || 0);
+    });
+
+    otherPosts.sort((a, b) => (b.post.timestamp || 0) - (a.post.timestamp || 0));
+
+    const sortedEntries = [...todayPosts, ...otherPosts];
+    const userIds = [...new Set(sortedEntries.map(e => e.post.userId))];
+    const verificationStatus = {};
+    await Promise.all(userIds.map(async (uid) => {
+      verificationStatus[uid] = await checkVerification(uid);
+    }));
+
+    for (let { id, post, likesCount, isToday } of sortedEntries) {
+      const likedByMe = currentUser && post.likes && post.likes[currentUser.uid];
+      const isVerified = verificationStatus[post.userId] || false;
+      const isPopular = isToday && likesCount >= 3;
+
+      const postDiv = document.createElement('div');
+      postDiv.className = 'post' + (isPopular ? ' popular' : '');
+
+      const tagsHtml = post.tags && post.tags.length > 0
+        ? post.tags.map(tag => `<span class="tag" data-tag="${escapeHtml(tag)}" onclick="event.stopPropagation();">#${escapeHtml(tag)}</span>`).join('')
+        : '';
+
+      postDiv.innerHTML = `
+        ${isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : ''}
+        <div class="post-header">
+          <span class="username-wrapper" data-username="${escapeHtml(post.userUsername)}">
+            <span class="username">@${escapeHtml(post.userUsername)}</span>
+            ${isVerified ? '<img src="verification.png" alt="✓" class="verified-badge" style="width:16px;height:16px;">' : ''}
+          </span>
+          <span>${escapeHtml(post.userName || '')}</span>
+        </div>
+        <div class="post-text">${escapeHtml(post.text)}</div>
+        ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <button class="like-btn ${likedByMe ? 'liked' : ''}" data-post-id="${id}">❤️ ${likesCount}</button>
+          <div class="post-stats">
+            <span>${post.timestamp ? new Date(post.timestamp).toLocaleString() : ''}</span>
+            ${isPopular ? '<span>⭐ Популярное</span>' : ''}
+          </div>
+        </div>
+      `;
+      container.appendChild(postDiv);
+    }
+
+    container.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await toggleLike(btn.dataset.postId);
+      });
+    });
+
+    container.querySelectorAll('.username-wrapper').forEach(el => {
+      el.addEventListener('click', () => {
+        const username = el.dataset.username;
+        if (username) showUserProfileByUsername(username);
+      });
+    });
+
+    container.querySelectorAll('.tag').forEach(tagEl => {
+      tagEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterByTag(tagEl.dataset.tag);
+      });
+    });
+  }
+
+  function filterByTag(tag) {
+    currentFilterTag = normalizeTag(tag);
+    document.getElementById('filter-tag-input').value = currentFilterTag;
+    updateFilterTagsUI();
+    loadFeedWithFilter();
+    setActiveTab(document.getElementById('tab-feed'));
+    showElement(feedSection);
+  }
+
+  function updateFilterTagsUI() {
+    filterTagsDiv.innerHTML = '';
+    const allTag = document.createElement('span');
+    allTag.className = 'tag' + (currentFilterTag === '__all__' ? ' active-tag' : '');
+    allTag.dataset.tag = '__all__';
+    allTag.textContent = 'Все посты';
+    allTag.addEventListener('click', () => {
+      currentFilterTag = '__all__';
+      document.getElementById('filter-tag-input').value = '';
+      updateFilterTagsUI();
+      loadFeedWithFilter();
+    });
+    filterTagsDiv.appendChild(allTag);
+
+    if (currentFilterTag !== '__all__') {
+      const activeTag = document.createElement('span');
+      activeTag.className = 'tag active-tag';
+      activeTag.textContent = '#' + currentFilterTag;
+      filterTagsDiv.appendChild(activeTag);
+    }
+
+    const popularTagsArray = Array.from(allPopularTags).slice(0, 8);
+    popularTagsArray.forEach(tag => {
+      if (tag !== currentFilterTag) {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'tag';
+        tagEl.dataset.tag = tag;
+        tagEl.textContent = '#' + tag;
+        tagEl.addEventListener('click', () => filterByTag(tag));
+        filterTagsDiv.appendChild(tagEl);
+      }
+    });
+  }
+
+  function loadFeedWithFilter() {
+    db.ref('posts').off();
+    db.ref('posts').on('value', snapshot => {
+      const posts = snapshot.val();
+      allPopularTags.clear();
+      if (posts) {
+        Object.values(posts).forEach(post => {
+          if (post.tags) post.tags.forEach(tag => allPopularTags.add(tag));
+        });
+      }
+      updateFilterTagsUI();
+      renderPosts(posts, feedPostsDiv, currentFilterTag);
+    });
+  }
+
+  async function showUserProfileByUsername(username) {
+    setActiveTab(document.getElementById('tab-profile'));
+    showElement(profileSection);
+    const snap = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+    if (!snap.exists()) {
+      profileInfoDiv.innerHTML = '<p>Пользователь не найден</p>';
+      profilePostsDiv.innerHTML = '';
+      return;
+    }
+    let user = null;
+    snap.forEach(child => { user = child.val(); });
+    if (user) {
+      const verified = await checkVerification(user.uid);
+      profileInfoDiv.innerHTML = `
+        <strong>${escapeHtml(user.name)}</strong> • @${escapeHtml(user.username)}
+        ${verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : ''}
+      `;
+      loadPostsByUser(user.uid, profilePostsDiv);
+    }
+  }
+
+  function loadPostsByUser(uid, container) {
+    db.ref('posts').orderByChild('userId').equalTo(uid).on('value', snapshot => {
+      renderPosts(snapshot.val(), container, '__all__');
+    });
+  }
+
+  async function loadUsersList() {
+    db.ref('users').on('value', async snapshot => {
+      usersListDiv.innerHTML = '';
+      const users = snapshot.val();
+      if (!users) { usersListDiv.innerHTML = '<p>Нет пользователей</p>'; return; }
+      for (let user of Object.values(users)) {
+        const verified = await checkVerification(user.uid);
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:12px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;';
+        div.innerHTML = `
+          <span><strong>${escapeHtml(user.name)}</strong> @${escapeHtml(user.username)}
+          ${verified ? '<img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;">' : ''}</span>
+          <button class="view-profile-btn secondary" data-username="${escapeHtml(user.username)}" style="width:auto;padding:6px 12px;">Смотреть</button>
+        `;
+        usersListDiv.appendChild(div);
+      }
+      document.querySelectorAll('.view-profile-btn').forEach(btn => {
+        btn.addEventListener('click', () => showUserProfileByUsername(btn.dataset.username));
+      });
+    });
+  }
+
+  function setActiveTab(tab) {
+    ['tab-feed','tab-profile','tab-users'].forEach(id => document.getElementById(id).classList.remove('active'));
+    tab.classList.add('active');
+    hideElement(feedSection);
+    hideElement(profileSection);
+    hideElement(usersSection);
+  }
+
+  async function onAuthSuccess(user) {
+    currentUser = user;
+    hideElement(authScreen);
+    showElement(mainScreen);
+    const verified = await checkVerification(user.uid);
+    currentUserDisplay.textContent = `🌿 ${user.name} (@${user.username})`;
+    updateVerifiedBadge(verified);
+
+    ['login-username','login-password','reg-name','reg-username','reg-password'].forEach(id => document.getElementById(id).value = '');
+    currentFilterTag = '__all__';
+    loadFeedWithFilter();
+    loadUsersList();
+    setActiveTab(document.getElementById('tab-feed'));
+    showElement(feedSection);
+    loadPostsByUser(currentUser.uid, profilePostsDiv);
+    const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
+    profileInfoDiv.innerHTML = `<strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}`;
+  }
+
+  function logout() {
+    removeFromLocalStorage();
+    currentUser = null;
+    showElement(authScreen);
+    hideElement(mainScreen);
+    hideElement(settingsModal);
+    db.ref('posts').off();
+    db.ref('users').off();
+    currentVerifiedBadge.classList.add('hidden');
+    currentFilterTag = '__all__';
+  }
+
+  async function tryAutoLogin() {
+    const savedData = getFromLocalStorage();
+    if (savedData && savedData.username && savedData.password) {
+      const result = await loginUser(savedData.username, savedData.password, false);
+      if (result.success) {
+        await onAuthSuccess(result.user);
+        return true;
+      } else {
+        removeFromLocalStorage();
+      }
+    }
+    return false;
+  }
+
+  document.getElementById('show-register').addEventListener('click', e => {
+    e.preventDefault();
+    hideElement(document.getElementById('login-form'));
+    showElement(document.getElementById('register-form'));
+    authError.textContent = '';
+  });
+  
+  document.getElementById('show-login').addEventListener('click', e => {
+    e.preventDefault();
+    showElement(document.getElementById('login-form'));
+    hideElement(document.getElementById('register-form'));
+    authError.textContent = '';
+  });
+
+  document.getElementById('register-btn').addEventListener('click', async () => {
+    const name = document.getElementById('reg-name').value.trim();
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !username || !password) return showAuthError('Заполните все поля');
+    if (password.length < 6) return showAuthError('Пароль минимум 6 символов');
+    const result = await registerUser(name, username, password);
+    result.error ? showAuthError(result.error) : onAuthSuccess(result.user);
+  });
+
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const rememberMe = document.getElementById('remember-me').checked;
+    if (!username || !password) return showAuthError('Введите юзернейм и пароль');
+    const result = await loginUser(username, password, rememberMe);
+    result.error ? showAuthError(result.error) : onAuthSuccess(result.user);
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', logout);
+
+  document.getElementById('send-post-btn').addEventListener('click', async () => {
+    const text = newPostText.value.trim();
+    if (!text) return;
+    const tagsString = newPostTags.value.trim();
+    const tags = parseTags(tagsString);
+    await createPost(text, tags);
+    newPostText.value = '';
+    newPostTags.value = '';
+    document.getElementById('tag-suggestions').innerHTML = '';
+  });
+
+  document.getElementById('add-tag-suggestion-btn').addEventListener('click', () => {
+    const suggestionsDiv = document.getElementById('tag-suggestions');
+    if (allPopularTags.size === 0) {
+      suggestionsDiv.innerHTML = '<span style="font-size:12px;color:#6b8569;">Нет тегов для подсказок</span>';
+      return;
+    }
+    suggestionsDiv.innerHTML = Array.from(allPopularTags).slice(0, 10).map(tag =>
+      `<span class="suggestion-tag" data-tag="${tag}">#${tag}</span>`
+    ).join('');
+
+    suggestionsDiv.querySelectorAll('.suggestion-tag').forEach(el => {
+      el.addEventListener('click', () => {
+        const currentTags = newPostTags.value.trim();
+        newPostTags.value = currentTags ? currentTags + ', ' + el.dataset.tag : el.dataset.tag;
+        suggestionsDiv.innerHTML = '';
+      });
+    });
+  });
+
+  document.getElementById('filter-tag-btn').addEventListener('click', () => {
+    const tag = document.getElementById('filter-tag-input').value.trim();
+    if (tag) {
+      currentFilterTag = normalizeTag(tag);
+      updateFilterTagsUI();
+      loadFeedWithFilter();
+      setActiveTab(document.getElementById('tab-feed'));
+      showElement(feedSection);
+    }
+  });
+
+  document.getElementById('clear-filter-btn').addEventListener('click', () => {
+    currentFilterTag = '__all__';
+    document.getElementById('filter-tag-input').value = '';
+    updateFilterTagsUI();
+    loadFeedWithFilter();
+  });
+
+  document.getElementById('filter-tag-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('filter-tag-btn').click();
+  });
+
+  document.getElementById('tab-feed').addEventListener('click', () => {
+    setActiveTab(document.getElementById('tab-feed'));
+    showElement(feedSection);
+    loadFeedWithFilter();
+  });
+  
+  document.getElementById('tab-profile').addEventListener('click', async () => {
+    setActiveTab(document.getElementById('tab-profile'));
+    showElement(profileSection);
+    if (currentUser) {
+      const verified = await checkVerification(currentUser.uid);
+      const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
+      profileInfoDiv.innerHTML = `<strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}`;
+      loadPostsByUser(currentUser.uid, profilePostsDiv);
+    }
+  });
+  
+  document.getElementById('tab-users').addEventListener('click', () => {
+    setActiveTab(document.getElementById('tab-users'));
+    showElement(usersSection);
+    loadUsersList();
+  });
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    document.getElementById('settings-name').value = currentUser.name;
+    document.getElementById('settings-username').value = currentUser.username;
+    document.getElementById('settings-old-password').value = '';
+    document.getElementById('settings-new-password').value = '';
+    ['name-status','username-status','password-status'].forEach(id => document.getElementById(id).textContent = '');
+    showElement(settingsModal);
+  });
+
+  document.getElementById('close-settings-btn').addEventListener('click', () => hideElement(settingsModal));
+
+  document.getElementById('save-name-btn').addEventListener('click', async () => {
+    const newName = document.getElementById('settings-name').value.trim();
+    if (!newName) return;
+    await updateUserName(newName);
+    document.getElementById('name-status').textContent = 'Имя обновлено!';
+    currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
+  });
+
+  document.getElementById('save-username-btn').addEventListener('click', async () => {
+    const newUsername = document.getElementById('settings-username').value.trim();
+    if (!newUsername) return;
+    const result = await updateUsername(newUsername);
+    const statusEl = document.getElementById('username-status');
+    if (result.error) {
+      statusEl.textContent = '❌ ' + result.error;
+      statusEl.className = 'error';
+    } else {
+      statusEl.textContent = 'Юзернейм обновлён!';
+      statusEl.className = 'success';
+      currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
+    }
+  });
+
+  document.getElementById('save-password-btn').addEventListener('click', async () => {
+    const oldPass = document.getElementById('settings-old-password').value;
+    const newPass = document.getElementById('settings-new-password').value;
+    if (!oldPass || !newPass) return;
+    const result = await updatePassword(oldPass, newPass);
+    const statusEl = document.getElementById('password-status');
+    if (result.error) {
+      statusEl.textContent = '❌ ' + result.error;
+      statusEl.className = 'error';
+    } else {
+      statusEl.textContent = 'Пароль изменён!';
+      statusEl.className = 'success';
+      document.getElementById('settings-old-password').value = '';
+      document.getElementById('settings-new-password').value = '';
+    }
+  });
+
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) hideElement(settingsModal);
+  });
+
+  function showAuthError(msg) {
+    authError.textContent = msg;
+    setTimeout(() => { authError.textContent = ''; }, 5000);
+  }
+
+  window.addEventListener('load', async () => {
+    const autoLoggedIn = await tryAutoLogin();
+    if (!autoLoggedIn) {
+      showElement(authScreen);
+      hideElement(mainScreen);
+    }
+  });
+</script>
+</body>
+</html>
