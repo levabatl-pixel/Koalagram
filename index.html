@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>🐨koalagram</title>
+  <title>??koalagram??</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
@@ -22,8 +22,8 @@
       --error: #e8a0a0;
       --tag-bg: #3a5539;
       --tag-active: #5a8a59;
+      --golden: #d4c37a;
       --popular-gradient: linear-gradient(135deg, #3d5530, #4a6240);
-      --messenger-accent: #7eb8da;
     }
 
     * {
@@ -107,16 +107,6 @@
       background: var(--accent);
       color: var(--accent-text);
       border-color: var(--accent);
-    }
-
-    button.messenger-btn {
-      background: var(--messenger-accent);
-      color: #0d1f2d;
-      border: 2px solid #5a9ab5;
-    }
-
-    button.messenger-btn:hover {
-      background: #6aa3bf;
     }
 
     .top-bar {
@@ -392,23 +382,28 @@
       background: var(--bg-secondary);
     }
 
-    .messenger-button-container {
-      position: relative;
+    .search-bar {
+      margin-bottom: 12px;
     }
 
-    .messenger-notification {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #ff6b6b;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
+    .search-bar input {
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    .user-rank {
+      font-size: 12px;
+      color: var(--accent);
       font-weight: 700;
     }
   </style>
@@ -416,7 +411,7 @@
 <body>
 <div id="app">
   <div id="auth-screen">
-    <h2 style="text-align: center; margin-bottom: 20px;">🐨 koalagram</h2>
+    <h2 style="text-align: center; margin-bottom: 20px;">?? koalagram</h2>
     <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
       любите почитать? вам сюда!
     </p>
@@ -442,7 +437,7 @@
         <a href="#" id="show-login" style="color: var(--accent);">Войти</a>
       </p>
       <p style="font-size: 12px; color: #6b8569; margin-top: 8px;">
-        ⚠ Юзернейм: только латиница, цифры и _
+        ? Юзернейм: только латиница, цифры и _
       </p>
     </div>
     <p id="auth-error" class="error" style="text-align: center;"></p>
@@ -452,27 +447,23 @@
     <div class="top-bar">
       <div style="display: flex; align-items: center; gap: 8px;">
         <h3 id="current-user-display"></h3>
-        <img id="current-verified-badge" class="verified-badge hidden" src="verification.png" alt="✓" style="width: 20px; height: 20px;">
+        <img id="current-verified-badge" class="verified-badge hidden" src="verification.png" alt="?" style="width: 20px; height: 20px;">
       </div>
       <div class="top-bar-actions">
-        <div class="messenger-button-container">
-          <button id="messenger-btn" class="messenger-btn" style="width: auto; padding: 8px 14px;">💬</button>
-          <span id="messenger-notification" class="messenger-notification hidden">0</span>
-        </div>
-        <button id="settings-btn" class="secondary" style="width: auto; padding: 8px 14px;">⚙️</button>
+        <button id="settings-btn" class="secondary" style="width: auto; padding: 8px 14px;">??</button>
         <button id="logout-btn" class="secondary" style="width: auto; padding: 8px 14px;">Выйти</button>
       </div>
     </div>
 
     <div class="tabs">
-      <button id="tab-feed" class="active">🐨 Лента</button>
-      <button id="tab-profile">👤 Мой профиль</button>
-      <button id="tab-users">🌐 Люди</button>
+      <button id="tab-feed" class="active">?? Лента</button>
+      <button id="tab-profile">?? Мой профиль</button>
+      <button id="tab-users">?? Люди</button>
     </div>
 
     <div id="feed-section">
       <div class="filter-bar">
-        <label>🔍 Фильтр по тегам</label>
+        <label>?? Фильтр по тегам</label>
         <div id="filter-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
           <span class="tag active-tag" data-tag="__all__">Все посты</span>
         </div>
@@ -487,7 +478,7 @@
         <textarea id="new-post-text" placeholder="Что нового?" rows="3" style="resize: none;"></textarea>
         <div class="tag-input-wrapper">
           <input type="text" id="new-post-tags" placeholder="Теги через запятую (например: природа, эвкалипт)" style="font-size: 14px;">
-          <button id="add-tag-suggestion-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">💡</button>
+          <button id="add-tag-suggestion-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">??</button>
         </div>
         <div id="tag-suggestions" class="tag-suggestions"></div>
         <button id="send-post-btn" style="margin-top: 12px;">Опубликовать</button>
@@ -502,13 +493,16 @@
     </div>
 
     <div id="users-section" class="hidden">
+      <div class="search-bar">
+        <input type="text" id="user-search-input" placeholder="?? Поиск по юзернейму..." autocomplete="off">
+      </div>
       <div id="users-list" class="card">Загрузка пользователей...</div>
     </div>
   </div>
 
   <div id="settings-modal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 20px;">⚙️ Настройки профиля</h3>
+      <h3 style="margin-bottom: 20px;">?? Настройки профиля</h3>
       <div class="settings-section">
         <label>Изменить имя</label>
         <input type="text" id="settings-name" placeholder="Новое имя">
@@ -534,7 +528,7 @@
 
   <div id="subscribers-modal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 style="margin-bottom: 16px;">👥 Подписчики</h3>
+      <h3 style="margin-bottom: 16px;">?? Подписчики</h3>
       <div id="subscribers-list" class="subscribers-modal"></div>
       <button id="close-subscribers-btn" class="secondary" style="margin-top: 12px;">Закрыть</button>
     </div>
@@ -558,6 +552,7 @@
   let currentUser = null;
   let currentFilterTag = '__all__';
   let allPopularTags = new Set();
+  let currentSearchQuery = '';
 
   const authScreen = document.getElementById('auth-screen');
   const mainScreen = document.getElementById('main-screen');
@@ -576,7 +571,7 @@
   const newPostText = document.getElementById('new-post-text');
   const newPostTags = document.getElementById('new-post-tags');
   const filterTagsDiv = document.getElementById('filter-tags');
-  const messengerNotification = document.getElementById('messenger-notification');
+  const userSearchInput = document.getElementById('user-search-input');
 
   const VALID_USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
   const VALID_TAG_REGEX = /^[a-zA-Zа-яА-Я0-9_ёЁ]+$/;
@@ -662,35 +657,6 @@
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
     }
-  }
-
-  function updateMessengerNotification() {
-    if (!currentUser) return;
-    db.ref(`messages/${currentUser.uid}`).on('value', snapshot => {
-      const messages = snapshot.val();
-      if (!messages) {
-        messengerNotification.classList.add('hidden');
-        return;
-      }
-      
-      let unreadCount = 0;
-      Object.values(messages).forEach(chat => {
-        if (chat && typeof chat === 'object') {
-          Object.values(chat).forEach(msg => {
-            if (msg && !msg.read && msg.from !== currentUser.uid) {
-              unreadCount++;
-            }
-          });
-        }
-      });
-      
-      if (unreadCount > 0) {
-        messengerNotification.textContent = unreadCount;
-        messengerNotification.classList.remove('hidden');
-      } else {
-        messengerNotification.classList.add('hidden');
-      }
-    });
   }
 
   async function checkUsernameExists(username, excludeUid = null) {
@@ -841,21 +807,21 @@
         : '';
 
       postDiv.innerHTML = `
-        ${isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : ''}
+        ${isPopular ? '<div class="popular-badge">?? Популярное сегодня</div>' : ''}
         <div class="post-header">
           <span class="username-wrapper" data-username="${escapeHtml(post.userUsername)}">
             <span class="username">@${escapeHtml(post.userUsername)}</span>
-            ${isVerified ? '<img src="verification.png" alt="✓" class="verified-badge" style="width:16px;height:16px;">' : ''}
+            ${isVerified ? '<img src="verification.png" alt="?" class="verified-badge" style="width:16px;height:16px;">' : ''}
           </span>
           <span>${escapeHtml(post.userName || '')}</span>
         </div>
         <div class="post-text">${escapeHtml(post.text)}</div>
         ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <button class="like-btn ${likedByMe ? 'liked' : ''}" data-post-id="${id}">❤️ ${likesCount}</button>
+          <button class="like-btn ${likedByMe ? 'liked' : ''}" data-post-id="${id}">?? ${likesCount}</button>
           <div class="post-stats">
             <span>${post.timestamp ? new Date(post.timestamp).toLocaleString() : ''}</span>
-            ${isPopular ? '<span>⭐ Популярное</span>' : ''}
+            ${isPopular ? '<span>? Популярное</span>' : ''}
           </div>
         </div>
       `;
@@ -963,14 +929,14 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
             <strong>${escapeHtml(user.name)}</strong> • @${escapeHtml(user.username)}
-            ${verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : ''}
+            ${verified ? ' <img src="verification.png" alt="?" style="width:16px;height:16px;vertical-align:middle;">' : ''}
             <div class="subscribers-count" style="cursor:pointer;" data-uid="${user.uid}">
-              👥 ${subscribersCount} подписчиков
+              ?? ${subscribersCount} подписчиков
             </div>
           </div>
           ${!isOwnProfile && currentUser ? 
             `<button class="subscribe-btn ${isUserSubscribed ? 'subscribed' : ''}" data-uid="${user.uid}" style="width:auto;padding:8px 16px;">
-              ${isUserSubscribed ? '✓ Вы подписаны' : '+ Подписаться'}
+              ${isUserSubscribed ? '? Вы подписаны' : '+ Подписаться'}
             </button>` : ''
           }
         </div>
@@ -986,11 +952,11 @@
         subscribeBtn.addEventListener('click', async () => {
           await toggleSubscription(user.uid);
           const newSubscribed = await isSubscribed(currentUser.uid, user.uid);
-          subscribeBtn.textContent = newSubscribed ? '✓ Вы подписаны' : '+ Подписаться';
+          subscribeBtn.textContent = newSubscribed ? '? Вы подписаны' : '+ Подписаться';
           subscribeBtn.classList.toggle('subscribed', newSubscribed);
           const newCount = await getSubscribersCount(user.uid);
           const countEl = profileInfoDiv.querySelector('.subscribers-count');
-          if (countEl) countEl.innerHTML = `👥 ${newCount} подписчиков`;
+          if (countEl) countEl.innerHTML = `?? ${newCount} подписчиков`;
         });
       }
 
@@ -1022,7 +988,7 @@
       div.innerHTML = `
         <strong>${escapeHtml(userData ? userData.name : 'Пользователь')}</strong> 
         @${escapeHtml(userData ? userData.username : 'неизвестный')}
-        ${verified ? ' <img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;">' : ''}
+        ${verified ? ' <img src="verification.png" alt="?" style="width:14px;height:14px;vertical-align:middle;">' : ''}
         ${currentUser && sub.uid === currentUser.uid ? ' <span style="color:var(--accent);">(вы)</span>' : ''}
       `;
       div.addEventListener('click', () => {
@@ -1041,47 +1007,85 @@
     });
   }
 
-  async function loadUsersList() {
-    db.ref('users').on('value', async snapshot => {
-      usersListDiv.innerHTML = '';
-      const users = snapshot.val();
-      if (!users) { usersListDiv.innerHTML = '<p>Нет пользователей</p>'; return; }
-      for (let user of Object.values(users)) {
-        const verified = await checkVerification(user.uid);
-        const subscribersCount = await getSubscribersCount(user.uid);
-        const isOwnProfile = currentUser && currentUser.uid === user.uid;
-        const isUserSubscribed = !isOwnProfile && currentUser && await isSubscribed(currentUser.uid, user.uid);
-        
-        const div = document.createElement('div');
-        div.style.cssText = 'padding:12px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
-        div.innerHTML = `
-          <div>
-            <span><strong>${escapeHtml(user.name)}</strong> @${escapeHtml(user.username)}
-            ${verified ? '<img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;">' : ''}</span>
-            <div class="subscribers-count" style="font-size:12px;">👥 ${subscribersCount} подписчиков</div>
-          </div>
-          <div style="display:flex;gap:6px;">
-            <button class="view-profile-btn secondary" data-username="${escapeHtml(user.username)}" style="width:auto;padding:6px 12px;">Смотреть</button>
-            ${!isOwnProfile && currentUser ? 
-              `<button class="subscribe-btn ${isUserSubscribed ? 'subscribed' : ''}" data-uid="${user.uid}" style="width:auto;padding:6px 12px;">
-                ${isUserSubscribed ? '✓' : '+'}
-              </button>` : ''
-            }
-          </div>
-        `;
-        usersListDiv.appendChild(div);
-      }
-      
-      document.querySelectorAll('.view-profile-btn').forEach(btn => {
-        btn.addEventListener('click', () => showUserProfileByUsername(btn.dataset.username));
-      });
+  async function loadUsersList(searchQuery = '') {
+    const usersSnap = await db.ref('users').once('value');
+    const users = usersSnap.val();
+    
+    if (!users) {
+      usersListDiv.innerHTML = '<p>Нет пользователей</p>';
+      return;
+    }
 
-      document.querySelectorAll('.subscribe-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const uid = btn.dataset.uid;
-          await toggleSubscription(uid);
-          loadUsersList();
-        });
+    let usersArray = Object.values(users);
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      usersArray = usersArray.filter(user => 
+        user.username.toLowerCase().includes(query)
+      );
+    }
+
+    const usersWithSubscribers = await Promise.all(
+      usersArray.map(async (user) => {
+        const subscribersCount = await getSubscribersCount(user.uid);
+        const verified = await checkVerification(user.uid);
+        return { ...user, subscribersCount, verified };
+      })
+    );
+
+    usersWithSubscribers.sort((a, b) => b.subscribersCount - a.subscribersCount);
+
+    usersListDiv.innerHTML = '';
+    
+    if (usersWithSubscribers.length === 0) {
+      usersListDiv.innerHTML = searchQuery 
+        ? '<p>Пользователи не найдены</p>' 
+        : '<p>Нет пользователей</p>';
+      return;
+    }
+
+    usersWithSubscribers.forEach((user, index) => {
+      const isOwnProfile = currentUser && currentUser.uid === user.uid;
+      
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:12px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
+      div.innerHTML = `
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${index < 3 ? '<span class="user-rank">??</span>' : ''}
+            <span><strong>${escapeHtml(user.name)}</strong> @${escapeHtml(user.username)}
+            ${user.verified ? '<img src="verification.png" alt="?" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;">' : ''}</span>
+          </div>
+          <div class="subscribers-count" style="font-size:12px;">?? ${user.subscribersCount} подписчиков</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="view-profile-btn secondary" data-username="${escapeHtml(user.username)}" style="width:auto;padding:6px 12px;">Смотреть</button>
+          ${!isOwnProfile && currentUser ? 
+            `<button class="subscribe-btn subscribe-list-btn" data-uid="${user.uid}" style="width:auto;padding:6px 12px;">
+              ...
+            </button>` : ''
+          }
+        </div>
+      `;
+      usersListDiv.appendChild(div);
+    });
+
+    document.querySelectorAll('.view-profile-btn').forEach(btn => {
+      btn.addEventListener('click', () => showUserProfileByUsername(btn.dataset.username));
+    });
+
+    document.querySelectorAll('.subscribe-list-btn').forEach(async (btn) => {
+      const uid = btn.dataset.uid;
+      const isUserSubscribed = await isSubscribed(currentUser.uid, uid);
+      btn.textContent = isUserSubscribed ? '?' : '+';
+      btn.classList.toggle('subscribed', isUserSubscribed);
+      
+      btn.addEventListener('click', async () => {
+        await toggleSubscription(uid);
+        const newSubscribed = await isSubscribed(currentUser.uid, uid);
+        btn.textContent = newSubscribed ? '?' : '+';
+        btn.classList.toggle('subscribed', newSubscribed);
+        loadUsersList(currentSearchQuery);
       });
     });
   }
@@ -1099,26 +1103,24 @@
     hideElement(authScreen);
     showElement(mainScreen);
     const verified = await checkVerification(user.uid);
-    currentUserDisplay.textContent = `🌿 ${user.name} (@${user.username})`;
+    currentUserDisplay.textContent = `?? ${user.name} (@${user.username})`;
     updateVerifiedBadge(verified);
 
     ['login-username','login-password','reg-name','reg-username','reg-password'].forEach(id => document.getElementById(id).value = '');
     currentFilterTag = '__all__';
     loadFeedWithFilter();
-    loadUsersList();
-    updateMessengerNotification();
     setActiveTab(document.getElementById('tab-feed'));
     showElement(feedSection);
     loadPostsByUser(currentUser.uid, profilePostsDiv);
     
     const subscribersCount = await getSubscribersCount(currentUser.uid);
-    const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
+    const badge = verified ? ' <img src="verification.png" alt="?" style="width:16px;height:16px;vertical-align:middle;">' : '';
     profileInfoDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}
           <div class="subscribers-count" style="cursor:pointer;" data-uid="${currentUser.uid}">
-            👥 ${subscribersCount} подписчиков
+            ?? ${subscribersCount} подписчиков
           </div>
         </div>
       </div>
@@ -1128,6 +1130,8 @@
     if (subscribersCountEl) {
       subscribersCountEl.addEventListener('click', () => showSubscribersList(currentUser.uid));
     }
+
+    loadUsersList();
   }
 
   function logout() {
@@ -1139,10 +1143,10 @@
     hideElement(subscribersModal);
     db.ref('posts').off();
     db.ref('users').off();
-    db.ref(`messages/${currentUser?.uid}`).off();
     currentVerifiedBadge.classList.add('hidden');
-    messengerNotification.classList.add('hidden');
     currentFilterTag = '__all__';
+    currentSearchQuery = '';
+    if (userSearchInput) userSearchInput.value = '';
   }
 
   async function tryAutoLogin() {
@@ -1157,12 +1161,6 @@
       }
     }
     return false;
-  }
-
-  function goToMessenger() {
-    if (currentUser) {
-      window.location.href = 'messenger.html';
-    }
   }
 
   document.getElementById('show-register').addEventListener('click', e => {
@@ -1199,7 +1197,6 @@
   });
 
   document.getElementById('logout-btn').addEventListener('click', logout);
-  document.getElementById('messenger-btn').addEventListener('click', goToMessenger);
 
   document.getElementById('send-post-btn').addEventListener('click', async () => {
     const text = newPostText.value.trim();
@@ -1253,6 +1250,11 @@
     if (e.key === 'Enter') document.getElementById('filter-tag-btn').click();
   });
 
+  userSearchInput.addEventListener('input', (e) => {
+    currentSearchQuery = e.target.value.trim();
+    loadUsersList(currentSearchQuery);
+  });
+
   document.getElementById('tab-feed').addEventListener('click', () => {
     setActiveTab(document.getElementById('tab-feed'));
     showElement(feedSection);
@@ -1265,13 +1267,13 @@
     if (currentUser) {
       const verified = await checkVerification(currentUser.uid);
       const subscribersCount = await getSubscribersCount(currentUser.uid);
-      const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
+      const badge = verified ? ' <img src="verification.png" alt="?" style="width:16px;height:16px;vertical-align:middle;">' : '';
       profileInfoDiv.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}
             <div class="subscribers-count" style="cursor:pointer;" data-uid="${currentUser.uid}">
-              👥 ${subscribersCount} подписчиков
+              ?? ${subscribersCount} подписчиков
             </div>
           </div>
         </div>
@@ -1289,7 +1291,8 @@
   document.getElementById('tab-users').addEventListener('click', () => {
     setActiveTab(document.getElementById('tab-users'));
     showElement(usersSection);
-    loadUsersList();
+    currentSearchQuery = userSearchInput.value.trim();
+    loadUsersList(currentSearchQuery);
   });
 
   document.getElementById('settings-btn').addEventListener('click', () => {
@@ -1308,7 +1311,7 @@
     if (!newName) return;
     await updateUserName(newName);
     document.getElementById('name-status').textContent = 'Имя обновлено!';
-    currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
+    currentUserDisplay.textContent = `?? ${currentUser.name} (@${currentUser.username})`;
   });
 
   document.getElementById('save-username-btn').addEventListener('click', async () => {
@@ -1317,12 +1320,12 @@
     const result = await updateUsername(newUsername);
     const statusEl = document.getElementById('username-status');
     if (result.error) {
-      statusEl.textContent = '❌ ' + result.error;
+      statusEl.textContent = '? ' + result.error;
       statusEl.className = 'error';
     } else {
       statusEl.textContent = 'Юзернейм обновлён!';
       statusEl.className = 'success';
-      currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
+      currentUserDisplay.textContent = `?? ${currentUser.name} (@${currentUser.username})`;
     }
   });
 
@@ -1333,7 +1336,7 @@
     const result = await updatePassword(oldPass, newPass);
     const statusEl = document.getElementById('password-status');
     if (result.error) {
-      statusEl.textContent = '❌ ' + result.error;
+      statusEl.textContent = '? ' + result.error;
       statusEl.className = 'error';
     } else {
       statusEl.textContent = 'Пароль изменён!';
