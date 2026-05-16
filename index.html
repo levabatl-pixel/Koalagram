@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>🐨koalagram🐨</title>
+  <title>Eucalyptus • Мессенджер с тегами</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
@@ -95,11 +95,7 @@
       border: 2px solid var(--border);
     }
 
-    button.danger { 
-      background: #5c3333; 
-      color: #f0d0d0; 
-      border: 2px solid #7a4040; 
-    }
+    button.danger { background: #5c3333; color: #f0d0d0; border: 2px solid #7a4040; }
 
     button.subscribe-btn {
       background: var(--border);
@@ -276,73 +272,6 @@
       margin-top: 8px;
     }
 
-    .post-menu {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 10;
-    }
-
-    .menu-dots {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 8px;
-      width: auto;
-      line-height: 1;
-      transition: all 0.2s;
-    }
-
-    .menu-dots:hover {
-      background: var(--bg-input);
-      color: var(--text-primary);
-    }
-
-    .menu-dropdown {
-      position: absolute;
-      right: 0;
-      top: 100%;
-      background: var(--bg-primary);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 8px;
-      min-width: 160px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      z-index: 20;
-    }
-
-    .menu-dropdown button {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 10px 14px;
-      background: transparent;
-      border: none;
-      color: var(--text-primary);
-      font-size: 14px;
-      border-radius: 8px;
-      margin-bottom: 4px;
-    }
-
-    .menu-dropdown button:last-child {
-      margin-bottom: 0;
-    }
-
-    .menu-dropdown button:hover {
-      background: var(--bg-card);
-    }
-
-    .menu-dropdown button.danger {
-      color: var(--error);
-    }
-
-    .menu-dropdown button.danger:hover {
-      background: #5c3333;
-    }
-
     .tabs {
       display: flex;
       gap: 8px;
@@ -478,30 +407,10 @@
       font-weight: 700;
     }
 
-    .delete-account-section {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 2px solid #7a4040;
-    }
-
-    .copy-notification {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent);
-      color: var(--accent-text);
-      padding: 12px 24px;
-      border-radius: 20px;
-      font-weight: 600;
-      z-index: 200;
-      animation: slideUp 0.3s ease;
-      font-size: 14px;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .tag-count {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-left: 2px;
     }
   </style>
 </head>
@@ -619,13 +528,6 @@
         <button id="save-password-btn" style="margin-top: 8px;">Обновить пароль</button>
         <p id="password-status" class="success"></p>
       </div>
-      
-      <div class="delete-account-section">
-        <label style="color: var(--error); font-weight: 600; text-transform: uppercase; font-size: 13px; margin-bottom: 8px; display: block;">Опасная зона</label>
-        <button id="delete-account-btn" class="danger" style="width: 100%;">Удалить аккаунт</button>
-        <p id="delete-status" class="error" style="margin-top: 8px;"></p>
-      </div>
-      
       <button id="close-settings-btn" class="secondary" style="margin-top: 12px;">Закрыть</button>
     </div>
   </div>
@@ -655,8 +557,10 @@
 
   let currentUser = null;
   let currentFilterTag = '__all__';
-  let allPopularTags = new Set();
+  let allPopularTags = new Map();
   let currentSearchQuery = '';
+  let feedPostsCache = null;
+  let feedListenerActive = false;
 
   const authScreen = document.getElementById('auth-screen');
   const mainScreen = document.getElementById('main-screen');
@@ -727,41 +631,6 @@
     return data ? JSON.parse(data) : null;
   }
 
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      showCopyNotification();
-    }).catch(() => {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showCopyNotification();
-    });
-  }
-
-  function showCopyNotification() {
-    const existingNotification = document.querySelector('.copy-notification');
-    if (existingNotification) existingNotification.remove();
-    
-    const notification = document.createElement('div');
-    notification.className = 'copy-notification';
-    notification.textContent = '✓ Текст скопирован';
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2000);
-  }
-
-  function closeAllMenus() {
-    document.querySelectorAll('.menu-dropdown').forEach(menu => menu.remove());
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.post-menu')) {
-      closeAllMenus();
-    }
-  });
-
   async function checkVerification(uid) {
     const snap = await db.ref(`users/${uid}/verification`).once('value');
     return snap.val() === true;
@@ -796,67 +665,6 @@
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
     }
-  }
-
-  async function deletePost(postId) {
-    await db.ref(`posts/${postId}`).remove();
-  }
-
-  async function deleteAccount() {
-    if (!currentUser) return;
-    
-    const postsSnap = await db.ref('posts').orderByChild('userId').equalTo(currentUser.uid).once('value');
-    const updates = {};
-    if (postsSnap.exists()) {
-      postsSnap.forEach(child => {
-        updates[`posts/${child.key}`] = null;
-      });
-    }
-    
-    updates[`users/${currentUser.uid}`] = null;
-    
-    const subsSnap = await db.ref('subscribers').once('value');
-    if (subsSnap.exists()) {
-      subsSnap.forEach(targetSnap => {
-        if (targetSnap.key === currentUser.uid) {
-          updates[`subscribers/${targetSnap.key}`] = null;
-        } else {
-          targetSnap.forEach(subSnap => {
-            if (subSnap.key === currentUser.uid) {
-              updates[`subscribers/${targetSnap.key}/${subSnap.key}`] = null;
-            }
-          });
-        }
-      });
-    }
-    
-    const contactsSnap = await db.ref('contacts').once('value');
-    if (contactsSnap.exists()) {
-      contactsSnap.forEach(userSnap => {
-        if (userSnap.key === currentUser.uid) {
-          updates[`contacts/${userSnap.key}`] = null;
-        } else {
-          userSnap.forEach(contactSnap => {
-            if (contactSnap.key === currentUser.uid) {
-              updates[`contacts/${userSnap.key}/${contactSnap.key}`] = null;
-            }
-          });
-        }
-      });
-    }
-    
-    const messagesSnap = await db.ref('messages').once('value');
-    if (messagesSnap.exists()) {
-      messagesSnap.forEach(chatSnap => {
-        const chatKey = chatSnap.key;
-        if (chatKey.includes(currentUser.uid)) {
-          updates[`messages/${chatKey}`] = null;
-        }
-      });
-    }
-    
-    await db.ref().update(updates);
-    logout();
   }
 
   async function checkUsernameExists(username, excludeUid = null) {
@@ -930,7 +738,7 @@
     return { success: true };
   }
 
-  function createPost(text, tagsArray) {
+  async function createPost(text, tagsArray) {
     const postRef = db.ref('posts').push();
     const post = {
       id: postRef.key,
@@ -942,56 +750,56 @@
       timestamp: firebase.database.ServerValue.TIMESTAMP,
       likes: {}
     };
-    return postRef.set(post);
+    await postRef.set(post);
+    loadFeedWithFilter();
   }
 
   async function toggleLike(postId) {
     if (!currentUser) return;
     const likeRef = db.ref(`posts/${postId}/likes/${currentUser.uid}`);
     const snap = await likeRef.once('value');
-    snap.exists() ? await likeRef.remove() : await likeRef.set(true);
+    if (snap.exists()) {
+      await likeRef.remove();
+    } else {
+      await likeRef.set(true);
+    }
+    
+    if (feedPostsCache && feedPostsCache[postId]) {
+      const post = feedPostsCache[postId];
+      const likeSnap = await db.ref(`posts/${postId}/likes`).once('value');
+      post.likes = likeSnap.val() || {};
+      updateSinglePostLike(postId, post);
+    }
   }
 
-  function togglePostMenu(postId, isOwnPost, postText, event) {
-    event.stopPropagation();
-    closeAllMenus();
+  function updateSinglePostLike(postId, post) {
+    const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+    const likedByMe = currentUser && post.likes && post.likes[currentUser.uid];
     
-    const menu = event.target.closest('.post-menu');
-    const existingDropdown = menu.querySelector('.menu-dropdown');
-    
-    if (existingDropdown) {
-      existingDropdown.remove();
-      return;
+    const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+    if (likeBtn) {
+      likeBtn.classList.toggle('liked', likedByMe);
+      likeBtn.innerHTML = `❤️ ${likesCount}`;
     }
+  }
+
+  function collectTagStats(posts) {
+    const tagStats = new Map();
+    if (!posts) return tagStats;
     
-    const dropdown = document.createElement('div');
-    dropdown.className = 'menu-dropdown';
-    
-    if (isOwnPost) {
-      dropdown.innerHTML = `
-        <button class="delete-post-btn danger">🗑 Удалить пост</button>
-      `;
-    } else {
-      dropdown.innerHTML = `
-        <button class="copy-post-btn">📋 Копировать текст</button>
-      `;
-    }
-    
-    dropdown.querySelector('.delete-post-btn')?.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (confirm('Вы уверены, что хотите удалить этот пост?')) {
-        await deletePost(postId);
+    Object.values(posts).forEach(post => {
+      if (post.tags) {
+        post.tags.forEach(tag => {
+          tagStats.set(tag, (tagStats.get(tag) || 0) + 1);
+        });
       }
-      dropdown.remove();
     });
     
-    dropdown.querySelector('.copy-post-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      copyToClipboard(postText);
-      dropdown.remove();
-    });
-    
-    menu.appendChild(dropdown);
+    return new Map([...tagStats.entries()].sort((a, b) => b[1] - a[1]));
+  }
+
+  function getTopTags(tagStats, limit = 5) {
+    return [...tagStats.entries()].slice(0, limit);
   }
 
   async function renderPosts(postsObj, container, filterTag = '__all__') {
@@ -1040,7 +848,6 @@
       const likedByMe = currentUser && post.likes && post.likes[currentUser.uid];
       const isVerified = verificationStatus[post.userId] || false;
       const isPopular = isToday && likesCount >= 3;
-      const isOwnPost = currentUser && post.userId === currentUser.uid;
 
       const postDiv = document.createElement('div');
       postDiv.className = 'post' + (isPopular ? ' popular' : '');
@@ -1051,9 +858,6 @@
 
       postDiv.innerHTML = `
         ${isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : ''}
-        <div class="post-menu">
-          <button class="menu-dots">⋯</button>
-        </div>
         <div class="post-header">
           <span class="username-wrapper" data-username="${escapeHtml(post.userUsername)}">
             <span class="username">@${escapeHtml(post.userUsername)}</span>
@@ -1071,12 +875,6 @@
           </div>
         </div>
       `;
-
-      const menuBtn = postDiv.querySelector('.menu-dots');
-      menuBtn.addEventListener('click', (e) => {
-        togglePostMenu(id, isOwnPost, post.text, e);
-      });
-
       container.appendChild(postDiv);
     }
 
@@ -1106,13 +904,14 @@
     currentFilterTag = normalizeTag(tag);
     document.getElementById('filter-tag-input').value = currentFilterTag;
     updateFilterTagsUI();
-    loadFeedWithFilter();
+    renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
     setActiveTab(document.getElementById('tab-feed'));
     showElement(feedSection);
   }
 
   function updateFilterTagsUI() {
     filterTagsDiv.innerHTML = '';
+    
     const allTag = document.createElement('span');
     allTag.className = 'tag' + (currentFilterTag === '__all__' ? ' active-tag' : '');
     allTag.dataset.tag = '__all__';
@@ -1121,7 +920,7 @@
       currentFilterTag = '__all__';
       document.getElementById('filter-tag-input').value = '';
       updateFilterTagsUI();
-      loadFeedWithFilter();
+      renderPosts(feedPostsCache, feedPostsDiv, '__all__');
     });
     filterTagsDiv.appendChild(allTag);
 
@@ -1132,13 +931,15 @@
       filterTagsDiv.appendChild(activeTag);
     }
 
-    const popularTagsArray = Array.from(allPopularTags).slice(0, 8);
-    popularTagsArray.forEach(tag => {
+    const tagStats = collectTagStats(feedPostsCache);
+    const topTags = getTopTags(tagStats, 5);
+
+    topTags.forEach(([tag, count]) => {
       if (tag !== currentFilterTag) {
         const tagEl = document.createElement('span');
         tagEl.className = 'tag';
         tagEl.dataset.tag = tag;
-        tagEl.textContent = '#' + tag;
+        tagEl.innerHTML = `#${tag} <span class="tag-count">${count}</span>`;
         tagEl.addEventListener('click', () => filterByTag(tag));
         filterTagsDiv.appendChild(tagEl);
       }
@@ -1146,18 +947,27 @@
   }
 
   function loadFeedWithFilter() {
-    db.ref('posts').off();
-    db.ref('posts').on('value', snapshot => {
-      const posts = snapshot.val();
-      allPopularTags.clear();
-      if (posts) {
-        Object.values(posts).forEach(post => {
-          if (post.tags) post.tags.forEach(tag => allPopularTags.add(tag));
-        });
+    if (feedListenerActive) {
+      db.ref('posts').off('value');
+    }
+    
+    db.ref('posts').once('value', snapshot => {
+      feedPostsCache = snapshot.val();
+      
+      if (feedPostsCache) {
+        const tagStats = collectTagStats(feedPostsCache);
+        allPopularTags = tagStats;
       }
+      
       updateFilterTagsUI();
-      renderPosts(posts, feedPostsDiv, currentFilterTag);
+      renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
     });
+    
+    db.ref('posts').on('value', snapshot => {
+      feedPostsCache = snapshot.val();
+    });
+    
+    feedListenerActive = true;
   }
 
   async function showUserProfileByUsername(username) {
@@ -1254,7 +1064,7 @@
   }
 
   function loadPostsByUser(uid, container) {
-    db.ref('posts').orderByChild('userId').equalTo(uid).on('value', snapshot => {
+    db.ref('posts').orderByChild('userId').equalTo(uid).once('value', snapshot => {
       renderPosts(snapshot.val(), container, '__all__');
     });
   }
@@ -1398,6 +1208,8 @@
     currentVerifiedBadge.classList.add('hidden');
     currentFilterTag = '__all__';
     currentSearchQuery = '';
+    feedPostsCache = null;
+    feedListenerActive = false;
     if (userSearchInput) userSearchInput.value = '';
   }
 
@@ -1467,8 +1279,10 @@
       suggestionsDiv.innerHTML = '<span style="font-size:12px;color:#6b8569;">Нет тегов для подсказок</span>';
       return;
     }
-    suggestionsDiv.innerHTML = Array.from(allPopularTags).slice(0, 10).map(tag =>
-      `<span class="suggestion-tag" data-tag="${tag}">#${tag}</span>`
+    
+    const topTags = getTopTags(allPopularTags, 5);
+    suggestionsDiv.innerHTML = topTags.map(([tag, count]) =>
+      `<span class="suggestion-tag" data-tag="${tag}">#${tag} (${count})</span>`
     ).join('');
 
     suggestionsDiv.querySelectorAll('.suggestion-tag').forEach(el => {
@@ -1485,7 +1299,7 @@
     if (tag) {
       currentFilterTag = normalizeTag(tag);
       updateFilterTagsUI();
-      loadFeedWithFilter();
+      renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
       setActiveTab(document.getElementById('tab-feed'));
       showElement(feedSection);
     }
@@ -1495,7 +1309,7 @@
     currentFilterTag = '__all__';
     document.getElementById('filter-tag-input').value = '';
     updateFilterTagsUI();
-    loadFeedWithFilter();
+    renderPosts(feedPostsCache, feedPostsDiv, '__all__');
   });
 
   document.getElementById('filter-tag-input').addEventListener('keypress', (e) => {
@@ -1510,7 +1324,7 @@
   document.getElementById('tab-feed').addEventListener('click', () => {
     setActiveTab(document.getElementById('tab-feed'));
     showElement(feedSection);
-    loadFeedWithFilter();
+    renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
   });
   
   document.getElementById('tab-profile').addEventListener('click', async () => {
@@ -1552,7 +1366,7 @@
     document.getElementById('settings-username').value = currentUser.username;
     document.getElementById('settings-old-password').value = '';
     document.getElementById('settings-new-password').value = '';
-    ['name-status','username-status','password-status','delete-status'].forEach(id => document.getElementById(id).textContent = '');
+    ['name-status','username-status','password-status'].forEach(id => document.getElementById(id).textContent = '');
     showElement(settingsModal);
   });
 
@@ -1595,14 +1409,6 @@
       statusEl.className = 'success';
       document.getElementById('settings-old-password').value = '';
       document.getElementById('settings-new-password').value = '';
-    }
-  });
-
-  document.getElementById('delete-account-btn').addEventListener('click', async () => {
-    if (confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить! Все ваши посты, подписки и сообщения будут удалены.')) {
-      if (confirm('Подтвердите удаление аккаунта. Это последнее предупреждение!')) {
-        await deleteAccount();
-      }
     }
   });
 
