@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=1.0">
-  <title>🐨Koalagram🐨</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Eucalyptus • Мессенджер с тегами</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
@@ -23,7 +23,6 @@
       --tag-bg: #3a5539;
       --tag-active: #5a8a59;
       --golden: #d4c37a;
-      --premium-name: #f0d060;
       --popular-gradient: linear-gradient(135deg, #3d5530, #4a6240);
     }
 
@@ -101,6 +100,7 @@
     button.subscribe-btn {
       background: var(--border);
       color: var(--text-primary);
+      border: 2px solid var(--border);
     }
 
     button.subscribe-btn.subscribed {
@@ -109,88 +109,318 @@
       border-color: var(--accent);
     }
 
-    button.donate-btn {
-      background: var(--premium-name);
-      color: #0d1f0d;
-      font-weight: 800;
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .top-bar-actions { display: flex; gap: 8px; align-items: center; }
+    .top-bar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-    .card { background: var(--bg-secondary); border-radius: 18px; padding: 18px; border: 1px solid var(--border); }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
 
     .post {
-      background: var(--bg-card); border-radius: 20px; padding: 18px; margin-bottom: 14px;
-      border: 1px solid var(--border); position: relative;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+      position: relative;
     }
 
     .post.popular {
-      background: var(--popular-gradient); border: 2px solid var(--accent);
+      background: var(--popular-gradient);
+      border: 2px solid var(--accent);
+      box-shadow: 0 4px 15px rgba(143, 188, 143, 0.1);
     }
 
-    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; color: var(--text-secondary); }
-    .username-wrapper { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .username { font-weight: 700; color: var(--accent); }
-    .username.premium { color: var(--premium-name); font-weight: 800; }
-    .verified-badge { width: 18px; height: 18px; }
-    .post-text { font-size: 16px; margin: 12px 0; word-break: break-word; line-height: 1.5; }
-    .post-image { max-width: 100%; border-radius: 12px; margin-top: 10px; cursor: pointer; }
-    .tags-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-    .tag { background: var(--tag-bg); color: var(--text-primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; }
-    .tag:hover { background: var(--tag-active); border-color: var(--accent); }
-    .tag.active-tag { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 700; }
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
 
-    .like-btn { background: transparent; border: 2px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 30px; font-size: 14px; width: auto; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+    .username-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .username { font-weight: 700; color: var(--accent); }
+
+    .verified-badge {
+      width: 18px;
+      height: 18px;
+      image-rendering: crisp-edges;
+    }
+
+    .post-text {
+      font-size: 16px;
+      margin: 12px 0;
+      word-break: break-word;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .tag {
+      background: var(--tag-bg);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag:hover {
+      background: var(--tag-active);
+      border-color: var(--accent);
+    }
+
+    .tag.active-tag {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .tag-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .tag-input-wrapper input {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+
+    .tag-input-wrapper button {
+      width: auto;
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .like-btn {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 14px;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
     .like-btn:hover { background: #3d553d; }
     .like-btn.liked { background: var(--like-active); border-color: var(--like-active); color: white; }
 
-    .popular-badge { position: absolute; top: -8px; right: 16px; background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
-    .post-stats { display: flex; gap: 16px; color: var(--text-secondary); font-size: 12px; margin-top: 8px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 6px; }
-    .tabs button { flex: 1; background: var(--bg-secondary); color: var(--text-secondary); border: 2px solid var(--border); }
-    .tabs button.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-    .filter-bar { background: var(--bg-secondary); border-radius: 16px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border); }
-    .filter-bar label { display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); display: flex; align-items: center;
-      justify-content: center; z-index: 100;
-    }
-    .modal {
-      background: var(--bg-primary); border-radius: 24px; padding: 28px;
-      width: 90%; max-width: 450px; border: 2px solid var(--border);
-      max-height: 90vh; overflow-y: auto;
+    .popular-badge {
+      position: absolute;
+      top: -8px;
+      right: 16px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
     }
 
-    .subscribers-count { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-    .subscriber-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-    .subscriber-item:hover { background: var(--bg-secondary); }
-
-    .search-bar input {
-      background: var(--bg-input); border: 2px solid var(--border);
-      color: var(--text-primary); border-radius: 12px; padding: 10px 14px;
-      font-size: 14px; outline: none; width: 100%;
+    .post-stats {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-top: 8px;
     }
 
-    .user-rank { font-size: 12px; color: var(--accent); font-weight: 700; }
-    .tag-count { font-size: 10px; opacity: 0.7; margin-left: 2px; }
-    .preview-image { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; }
-    .premium-badge { background: var(--premium-name); color: #0d1f0d; font-size: 10px; padding: 2px 6px; border-radius: 8px; margin-left: 4px; font-weight: 700; }
-    .remove-image-btn { position: absolute; top: 4px; right: 4px; background: #5c3333; border: none; color: #e8a0a0; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .image-preview-container { position: relative; display: inline-block; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .tabs button {
+      flex: 1;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+    }
+
+    .tabs button.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .filter-bar {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .filter-bar label {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    hr { border-color: var(--border); margin: 16px 0; }
+
     .error { color: var(--error); font-size: 14px; }
     .success { color: var(--accent); font-size: 14px; }
+
     .settings-section { margin-bottom: 16px; }
-    .settings-section label { display: block; color: var(--text-secondary); margin-bottom: 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; }
+    .settings-section label {
+      display: block;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: 24px;
+      padding: 28px;
+      width: 90%;
+      max-width: 450px;
+      border: 2px solid var(--border);
+    }
+
+    .tag-suggestions {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .suggestion-tag {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .subscribers-count {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .subscribers-modal {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .subscriber-item {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .subscriber-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .search-bar {
+      margin-bottom: 12px;
+    }
+
+    .search-bar input {
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    .user-rank {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .tag-count {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-left: 2px;
+    }
   </style>
 </head>
 <body>
 <div id="app">
   <div id="auth-screen">
     <h2 style="text-align: center; margin-bottom: 20px;">🐨 koalagram</h2>
-    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">любите почитать? вам сюда!</p>
+    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+      любите почитать? вам сюда!
+    </p>
     <div id="login-form">
       <input type="text" id="login-username" placeholder="Юзернейм" autocomplete="off" maxlength="30">
       <input type="password" id="login-password" placeholder="Пароль" style="margin-top: 10px;">
@@ -200,7 +430,8 @@
       </div>
       <button id="login-btn" style="margin-top: 14px;">Войти</button>
       <p style="margin-top: 14px; text-align: center; color: var(--text-secondary);">
-        Нет аккаунта? <a href="#" id="show-register" style="color: var(--accent);">Зарегистрироваться</a>
+        Нет аккаунта?
+        <a href="#" id="show-register" style="color: var(--accent); margin-left: 4px;">Зарегистрироваться</a>
       </p>
     </div>
     <div id="register-form" class="hidden">
@@ -211,7 +442,9 @@
       <p style="margin-top: 14px; text-align: center; color: var(--text-secondary);">
         <a href="#" id="show-login" style="color: var(--accent);">Войти</a>
       </p>
-      <p style="font-size: 12px; color: #6b8569; margin-top: 8px;">⚠ Юзернейм: только латиница, цифры и _</p>
+      <p style="font-size: 12px; color: #6b8569; margin-top: 8px;">
+        ⚠ Юзернейм: только латиница, цифры и _
+      </p>
     </div>
     <p id="auth-error" class="error" style="text-align: center;"></p>
   </div>
@@ -223,7 +456,6 @@
         <img id="current-verified-badge" class="verified-badge hidden" src="verification.png" alt="✓" style="width: 20px; height: 20px;">
       </div>
       <div class="top-bar-actions">
-        <button id="donate-btn" class="donate-btn" style="width: auto; padding: 8px 14px; font-size: 13px;">⭐ Premium</button>
         <button id="settings-btn" class="secondary" style="width: auto; padding: 8px 14px;">⚙️</button>
         <button id="logout-btn" class="secondary" style="width: auto; padding: 8px 14px;">Выйти</button>
       </div>
@@ -231,7 +463,7 @@
 
     <div class="tabs">
       <button id="tab-feed" class="active">🐨 Лента</button>
-      <button id="tab-profile">👤 Профиль</button>
+      <button id="tab-profile">👤 Мой профиль</button>
       <button id="tab-users">🌐 Люди</button>
     </div>
 
@@ -250,14 +482,11 @@
 
       <div class="card" style="margin-bottom: 16px;">
         <textarea id="new-post-text" placeholder="Что нового?" rows="3" style="resize: none;"></textarea>
-        <input type="file" id="image-upload-input" accept="image/jpeg,image/png" class="hidden">
-        <div id="image-preview-area" style="margin-top: 8px;"></div>
-        <div class="tag-input-wrapper" style="display: flex; gap: 8px; margin-top: 10px;">
-          <input type="text" id="new-post-tags" placeholder="Теги через запятую" style="flex:1; padding: 10px 14px; font-size: 14px;">
+        <div class="tag-input-wrapper">
+          <input type="text" id="new-post-tags" placeholder="Теги через запятую (например: природа, эвкалипт)" style="font-size: 14px;">
           <button id="add-tag-suggestion-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">💡</button>
-          <button id="attach-image-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">🖼️</button>
         </div>
-        <div id="tag-suggestions" class="tag-suggestions" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+        <div id="tag-suggestions" class="tag-suggestions"></div>
         <button id="send-post-btn" style="margin-top: 12px;">Опубликовать</button>
       </div>
 
@@ -270,7 +499,7 @@
     </div>
 
     <div id="users-section" class="hidden">
-      <div class="search-bar" style="margin-bottom: 12px;">
+      <div class="search-bar">
         <input type="text" id="user-search-input" placeholder="🔍 Поиск по юзернейму..." autocomplete="off">
       </div>
       <div id="users-list" class="card">Загрузка пользователей...</div>
@@ -306,32 +535,8 @@
   <div id="subscribers-modal" class="modal-overlay hidden">
     <div class="modal">
       <h3 style="margin-bottom: 16px;">👥 Подписчики</h3>
-      <div id="subscribers-list" style="max-height: 400px; overflow-y: auto;"></div>
+      <div id="subscribers-list" class="subscribers-modal"></div>
       <button id="close-subscribers-btn" class="secondary" style="margin-top: 12px;">Закрыть</button>
-    </div>
-  </div>
-
-  <div id="subscription-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <h2 style="color: var(--premium-name); text-align: center; margin-bottom: 20px;">🌟 Eucalyptus Premium</h2>
-      <p style="text-align: center; margin-bottom: 20px; font-size: 16px;">
-        Купите подписку Eucalyptus за <strong style="color: var(--premium-name);">200 рублей</strong>!
-      </p>
-      <div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="color: var(--accent); margin-bottom: 10px;">Функции подписки:</h3>
-        <ul style="list-style: none; padding-left: 0;">
-          <li style="padding: 8px 0;">🖼️ Отправка картинок в постах</li>
-          <li style="padding: 8px 0;">⭐ Ваше имя будет жёлтого цвета для всех</li>
-        </ul>
-      </div>
-      <p style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
-        Скиньте на Donation Alerts 200 рублей и прикрепите свой юзернейм
-      </p>
-      <a href="https://www.donationalerts.com/r/koalagram" target="_blank" style="text-decoration: none;">
-        <button class="donate-btn" style="width: 100%; padding: 14px; font-size: 16px;">💰 Перейти к оплате</button>
-      </a>
-      <p style="text-align: center; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">После оплаты подписка активируется вручную</p>
-      <button id="close-subscription-modal" class="secondary" style="margin-top: 12px;">Закрыть</button>
     </div>
   </div>
 </div>
@@ -349,7 +554,6 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const storage = firebase.storage();
 
   let currentUser = null;
   let currentFilterTag = '__all__';
@@ -357,7 +561,25 @@
   let currentSearchQuery = '';
   let feedPostsCache = null;
   let feedListenerActive = false;
-  let selectedImageFile = null;
+
+  const authScreen = document.getElementById('auth-screen');
+  const mainScreen = document.getElementById('main-screen');
+  const authError = document.getElementById('auth-error');
+  const settingsModal = document.getElementById('settings-modal');
+  const subscribersModal = document.getElementById('subscribers-modal');
+  const currentUserDisplay = document.getElementById('current-user-display');
+  const currentVerifiedBadge = document.getElementById('current-verified-badge');
+  const feedSection = document.getElementById('feed-section');
+  const profileSection = document.getElementById('profile-section');
+  const usersSection = document.getElementById('users-section');
+  const feedPostsDiv = document.getElementById('feed-posts');
+  const profilePostsDiv = document.getElementById('profile-posts');
+  const profileInfoDiv = document.getElementById('profile-info');
+  const usersListDiv = document.getElementById('users-list');
+  const newPostText = document.getElementById('new-post-text');
+  const newPostTags = document.getElementById('new-post-tags');
+  const filterTagsDiv = document.getElementById('filter-tags');
+  const userSearchInput = document.getElementById('user-search-input');
 
   const VALID_USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
   const VALID_TAG_REGEX = /^[a-zA-Zа-яА-Я0-9_ёЁ]+$/;
@@ -385,6 +607,12 @@
     return tag.toLowerCase().replace(/\s+/g, '_');
   }
 
+  function getTodayStartTimestamp() {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now.getTime();
+  }
+
   function saveToLocalStorage(userData) {
     localStorage.setItem('koalagram_user', JSON.stringify({
       uid: userData.uid,
@@ -403,48 +631,29 @@
     return data ? JSON.parse(data) : null;
   }
 
-  async function checkPremiumStatus(uid) {
-    const snap = await db.ref('users/' + uid + '/eucalyptus').once('value');
-    return snap.val() === true;
-  }
-
-  function updateDisplayName() {
-    if (!currentUser) return;
-    const isPremium = currentUser.eucalyptus || false;
-    const name = currentUser.name || '';
-    const username = currentUser.username || '';
-    document.getElementById('current-user-display').innerHTML = 
-      '🌿 <span class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(name) + ' (@' + escapeHtml(username) + ')</span>' +
-      (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '');
-  }
-
   async function checkVerification(uid) {
-    const snap = await db.ref('users/' + uid + '/verification').once('value');
+    const snap = await db.ref(`users/${uid}/verification`).once('value');
     return snap.val() === true;
   }
 
   function updateVerifiedBadge(verified) {
-    if (verified) {
-      document.getElementById('current-verified-badge').classList.remove('hidden');
-    } else {
-      document.getElementById('current-verified-badge').classList.add('hidden');
-    }
+    verified ? currentVerifiedBadge.classList.remove('hidden') : currentVerifiedBadge.classList.add('hidden');
   }
 
   async function getSubscribersCount(uid) {
-    const snap = await db.ref('subscribers/' + uid).once('value');
+    const snap = await db.ref(`subscribers/${uid}`).once('value');
     const subs = snap.val();
     return subs ? Object.keys(subs).length : 0;
   }
 
   async function isSubscribed(subscriberUid, targetUid) {
-    const snap = await db.ref('subscribers/' + targetUid + '/' + subscriberUid).once('value');
+    const snap = await db.ref(`subscribers/${targetUid}/${subscriberUid}`).once('value');
     return snap.exists();
   }
 
   async function toggleSubscription(targetUid) {
     if (!currentUser || currentUser.uid === targetUid) return;
-    const subRef = db.ref('subscribers/' + targetUid + '/' + currentUser.uid);
+    const subRef = db.ref(`subscribers/${targetUid}/${currentUser.uid}`);
     const snap = await subRef.once('value');
     if (snap.exists()) {
       await subRef.remove();
@@ -458,35 +667,12 @@
     }
   }
 
-  function uploadImage(file) {
-    return new Promise((resolve, reject) => {
-      if (file.size > 3 * 1024 * 1024) {
-        return reject(new Error('Файл слишком большой. Максимальный размер: 3MB'));
-      }
-      if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        return reject(new Error('Только JPG и PNG файлы разрешены'));
-      }
-      
-      const storageRef = storage.ref('post_images/' + Date.now() + '_' + file.name);
-      const uploadTask = storageRef.put(file);
-      
-      uploadTask.on('state_changed',
-        null,
-        function(error) { reject(error); },
-        async function() {
-          const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-          resolve(downloadURL);
-        }
-      );
-    });
-  }
-
-  async function checkUsernameExists(username, excludeUid) {
+  async function checkUsernameExists(username, excludeUid = null) {
     const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
     if (!snapshot.exists()) return false;
     if (!excludeUid) return true;
     let exists = false;
-    snapshot.forEach(function(child) { if (child.key !== excludeUid) exists = true; });
+    snapshot.forEach(child => { if (child.key !== excludeUid) exists = true; });
     return exists;
   }
 
@@ -494,60 +680,45 @@
     if (!VALID_USERNAME_REGEX.test(username) || username.length < 3) {
       return { error: 'Юзернейм: только латиница, цифры и _, от 3 символов' };
     }
-    const exists = await checkUsernameExists(username, null);
-    if (exists) return { error: 'Юзернейм занят' };
+    if (await checkUsernameExists(username)) return { error: 'Юзернейм занят' };
     const uid = generateUid(username);
-    const userData = {
-      uid: uid,
-      name: name.trim(),
-      username: username.trim(),
-      password: password,
-      verification: false,
-      eucalyptus: false
-    };
+    const userData = { uid, name: name.trim(), username: username.trim(), password, verification: false };
     await db.ref('users/' + uid).set(userData);
     saveToLocalStorage(userData);
     return { success: true, user: userData };
   }
 
-  async function loginUser(username, password, rememberMe) {
+  async function loginUser(username, password, rememberMe = false) {
     const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
     if (!snapshot.exists()) return { error: 'Неверный юзернейм или пароль' };
     let user = null;
-    snapshot.forEach(function(child) {
-      const u = child.val();
-      if (u.password === password) user = u;
-    });
+    snapshot.forEach(child => { const u = child.val(); if (u.password === password) user = u; });
     if (!user) return { error: 'Неверный юзернейм или пароль' };
     if (rememberMe) saveToLocalStorage(user);
-    return { success: true, user: user };
+    return { success: true, user };
   }
 
   async function updateUserName(newName) {
-    await db.ref('users/' + currentUser.uid + '/name').set(newName.trim());
+    await db.ref(`users/${currentUser.uid}/name`).set(newName.trim());
     currentUser.name = newName.trim();
     saveToLocalStorage(currentUser);
-    updateDisplayName();
   }
 
   async function updateUsername(newUsername) {
     if (!VALID_USERNAME_REGEX.test(newUsername)) return { error: 'Неверный формат юзернейма' };
-    const exists = await checkUsernameExists(newUsername, currentUser.uid);
-    if (exists) return { error: 'Юзернейм занят' };
+    if (await checkUsernameExists(newUsername, currentUser.uid)) return { error: 'Юзернейм занят' };
     const updates = {};
-    updates['users/' + currentUser.uid + '/username'] = newUsername;
+    updates[`users/${currentUser.uid}/username`] = newUsername;
     const postsSnap = await db.ref('posts').orderByChild('userId').equalTo(currentUser.uid).once('value');
     if (postsSnap.exists()) {
-      postsSnap.forEach(function(child) {
-        updates['posts/' + child.key + '/userUsername'] = newUsername;
-      });
+      postsSnap.forEach(child => { updates[`posts/${child.key}/userUsername`] = newUsername; });
     }
     const subsSnap = await db.ref('subscribers').once('value');
     if (subsSnap.exists()) {
-      subsSnap.forEach(function(targetSnap) {
-        targetSnap.forEach(function(subSnap) {
+      subsSnap.forEach(targetSnap => {
+        targetSnap.forEach(subSnap => {
           if (subSnap.val().uid === currentUser.uid) {
-            updates['subscribers/' + targetSnap.key + '/' + subSnap.key + '/username'] = newUsername;
+            updates[`subscribers/${targetSnap.key}/${subSnap.key}/username`] = newUsername;
           }
         });
       });
@@ -555,22 +726,19 @@
     await db.ref().update(updates);
     currentUser.username = newUsername;
     saveToLocalStorage(currentUser);
-    updateDisplayName();
     return { success: true };
   }
 
   async function updatePassword(oldPass, newPass) {
     if (oldPass !== currentUser.password) return { error: 'Неверный текущий пароль' };
     if (newPass.length < 6) return { error: 'Новый пароль минимум 6 символов' };
-    await db.ref('users/' + currentUser.uid + '/password').set(newPass);
+    await db.ref(`users/${currentUser.uid}/password`).set(newPass);
     currentUser.password = newPass;
     saveToLocalStorage(currentUser);
     return { success: true };
   }
 
   async function createPost(text, tagsArray) {
-    if (!text.trim() && !selectedImageFile) return;
-    
     const postRef = db.ref('posts').push();
     const post = {
       id: postRef.key,
@@ -579,29 +747,16 @@
       userId: currentUser.uid,
       userName: currentUser.name,
       userUsername: currentUser.username,
-      premium: currentUser.eucalyptus || false,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
       likes: {}
     };
-
-    if (selectedImageFile) {
-      try {
-        post.imageUrl = await uploadImage(selectedImageFile);
-      } catch (error) {
-        alert(error.message);
-        return;
-      }
-    }
-
     await postRef.set(post);
-    selectedImageFile = null;
-    document.getElementById('image-preview-area').innerHTML = '';
     loadFeedWithFilter();
   }
 
   async function toggleLike(postId) {
     if (!currentUser) return;
-    const likeRef = db.ref('posts/' + postId + '/likes/' + currentUser.uid);
+    const likeRef = db.ref(`posts/${postId}/likes/${currentUser.uid}`);
     const snap = await likeRef.once('value');
     if (snap.exists()) {
       await likeRef.remove();
@@ -610,9 +765,10 @@
     }
     
     if (feedPostsCache && feedPostsCache[postId]) {
-      const likeSnap = await db.ref('posts/' + postId + '/likes').once('value');
-      feedPostsCache[postId].likes = likeSnap.val() || {};
-      updateSinglePostLike(postId, feedPostsCache[postId]);
+      const post = feedPostsCache[postId];
+      const likeSnap = await db.ref(`posts/${postId}/likes`).once('value');
+      post.likes = likeSnap.val() || {};
+      updateSinglePostLike(postId, post);
     }
   }
 
@@ -620,14 +776,10 @@
     const likesCount = post.likes ? Object.keys(post.likes).length : 0;
     const likedByMe = currentUser && post.likes && post.likes[currentUser.uid];
     
-    const likeBtn = document.querySelector('.like-btn[data-post-id="' + postId + '"]');
+    const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
     if (likeBtn) {
-      if (likedByMe) {
-        likeBtn.classList.add('liked');
-      } else {
-        likeBtn.classList.remove('liked');
-      }
-      likeBtn.innerHTML = '❤️ ' + likesCount;
+      likeBtn.classList.toggle('liked', likedByMe);
+      likeBtn.innerHTML = `❤️ ${likesCount}`;
     }
   }
 
@@ -635,23 +787,22 @@
     const tagStats = new Map();
     if (!posts) return tagStats;
     
-    Object.values(posts).forEach(function(post) {
+    Object.values(posts).forEach(post => {
       if (post.tags) {
-        post.tags.forEach(function(tag) {
+        post.tags.forEach(tag => {
           tagStats.set(tag, (tagStats.get(tag) || 0) + 1);
         });
       }
     });
     
-    return new Map([...tagStats.entries()].sort(function(a, b) { return b[1] - a[1]; }));
+    return new Map([...tagStats.entries()].sort((a, b) => b[1] - a[1]));
   }
 
-  function getTopTags(tagStats, limit) {
-    limit = limit || 5;
+  function getTopTags(tagStats, limit = 5) {
     return [...tagStats.entries()].slice(0, limit);
   }
 
-  async function renderPosts(postsObj, container, filterTag) {
+  async function renderPosts(postsObj, container, filterTag = '__all__') {
     container.innerHTML = '';
     if (!postsObj) {
       container.innerHTML = '<p style="color:#6b8569;">Пока нет постов.</p>';
@@ -659,22 +810,16 @@
     }
 
     let entries = Object.entries(postsObj);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayStartTime = todayStart.getTime();
+    const todayStart = getTodayStartTimestamp();
 
-    entries = entries.map(function(entry) {
-      const id = entry[0];
-      const post = entry[1];
+    entries = entries.map(([id, post]) => {
       const likesCount = post.likes ? Object.keys(post.likes).length : 0;
-      const isToday = post.timestamp >= todayStartTime;
-      return { id: id, post: post, likesCount: likesCount, isToday: isToday };
+      const isToday = post.timestamp >= todayStart;
+      return { id, post, likesCount, isToday };
     });
 
     if (filterTag !== '__all__') {
-      entries = entries.filter(function(entry) {
-        return entry.post.tags && entry.post.tags.includes(filterTag.toLowerCase());
-      });
+      entries = entries.filter(({ post }) => post.tags && post.tags.includes(filterTag.toLowerCase()));
     }
 
     if (entries.length === 0) {
@@ -682,85 +827,73 @@
       return;
     }
 
-    const todayPosts = entries.filter(function(e) { return e.isToday; });
-    const otherPosts = entries.filter(function(e) { return !e.isToday; });
+    const todayPosts = entries.filter(e => e.isToday);
+    const otherPosts = entries.filter(e => !e.isToday);
 
-    todayPosts.sort(function(a, b) {
+    todayPosts.sort((a, b) => {
       if (b.likesCount !== a.likesCount) return b.likesCount - a.likesCount;
       return (b.post.timestamp || 0) - (a.post.timestamp || 0);
     });
 
-    otherPosts.sort(function(a, b) {
-      return (b.post.timestamp || 0) - (a.post.timestamp || 0);
-    });
+    otherPosts.sort((a, b) => (b.post.timestamp || 0) - (a.post.timestamp || 0));
 
-    const sortedEntries = todayPosts.concat(otherPosts);
-    const userIds = [...new Set(sortedEntries.map(function(e) { return e.post.userId; }))];
+    const sortedEntries = [...todayPosts, ...otherPosts];
+    const userIds = [...new Set(sortedEntries.map(e => e.post.userId))];
     const verificationStatus = {};
-    await Promise.all(userIds.map(async function(uid) {
+    await Promise.all(userIds.map(async (uid) => {
       verificationStatus[uid] = await checkVerification(uid);
     }));
 
-    for (let i = 0; i < sortedEntries.length; i++) {
-      const entry = sortedEntries[i];
-      const id = entry.id;
-      const post = entry.post;
-      const likesCount = entry.likesCount;
-      const isToday = entry.isToday;
+    for (let { id, post, likesCount, isToday } of sortedEntries) {
       const likedByMe = currentUser && post.likes && post.likes[currentUser.uid];
       const isVerified = verificationStatus[post.userId] || false;
       const isPopular = isToday && likesCount >= 3;
-      const isPremium = post.premium || false;
 
       const postDiv = document.createElement('div');
       postDiv.className = 'post' + (isPopular ? ' popular' : '');
 
-      let tagsHtml = '';
-      if (post.tags && post.tags.length > 0) {
-        tagsHtml = post.tags.map(function(tag) {
-          return '<span class="tag" data-tag="' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</span>';
-        }).join('');
-      }
+      const tagsHtml = post.tags && post.tags.length > 0
+        ? post.tags.map(tag => `<span class="tag" data-tag="${escapeHtml(tag)}" onclick="event.stopPropagation();">#${escapeHtml(tag)}</span>`).join('')
+        : '';
 
-      postDiv.innerHTML = 
-        (isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : '') +
-        '<div class="post-header">' +
-          '<span class="username-wrapper" data-username="' + escapeHtml(post.userUsername) + '">' +
-            '<span class="username ' + (isPremium ? 'premium' : '') + '">@' + escapeHtml(post.userUsername) + '</span>' +
-            (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-            (isVerified ? '<img src="verification.png" alt="✓" class="verified-badge" style="width:16px;height:16px;">' : '') +
-          '</span>' +
-          '<span>' + escapeHtml(post.userName || '') + '</span>' +
-        '</div>' +
-        '<div class="post-text">' + escapeHtml(post.text) + '</div>' +
-        (post.imageUrl ? '<img src="' + escapeHtml(post.imageUrl) + '" class="post-image" onclick="window.open(\'' + escapeHtml(post.imageUrl) + '\')" alt="Post image">' : '') +
-        (tagsHtml ? '<div class="tags-container">' + tagsHtml + '</div>' : '') +
-        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-          '<button class="like-btn ' + (likedByMe ? 'liked' : '') + '" data-post-id="' + id + '">❤️ ' + likesCount + '</button>' +
-          '<div class="post-stats">' +
-            '<span>' + (post.timestamp ? new Date(post.timestamp).toLocaleString() : '') + '</span>' +
-            (isPopular ? '<span>⭐ Популярное</span>' : '') +
-          '</div>' +
-        '</div>';
+      postDiv.innerHTML = `
+        ${isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : ''}
+        <div class="post-header">
+          <span class="username-wrapper" data-username="${escapeHtml(post.userUsername)}">
+            <span class="username">@${escapeHtml(post.userUsername)}</span>
+            ${isVerified ? '<img src="verification.png" alt="✓" class="verified-badge" style="width:16px;height:16px;">' : ''}
+          </span>
+          <span>${escapeHtml(post.userName || '')}</span>
+        </div>
+        <div class="post-text">${escapeHtml(post.text)}</div>
+        ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <button class="like-btn ${likedByMe ? 'liked' : ''}" data-post-id="${id}">❤️ ${likesCount}</button>
+          <div class="post-stats">
+            <span>${post.timestamp ? new Date(post.timestamp).toLocaleString() : ''}</span>
+            ${isPopular ? '<span>⭐ Популярное</span>' : ''}
+          </div>
+        </div>
+      `;
       container.appendChild(postDiv);
     }
 
-    container.querySelectorAll('.like-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function(e) {
+    container.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         await toggleLike(btn.dataset.postId);
       });
     });
 
-    container.querySelectorAll('.username-wrapper').forEach(function(el) {
-      el.addEventListener('click', function() {
+    container.querySelectorAll('.username-wrapper').forEach(el => {
+      el.addEventListener('click', () => {
         const username = el.dataset.username;
         if (username) showUserProfileByUsername(username);
       });
     });
 
-    container.querySelectorAll('.tag').forEach(function(tagEl) {
-      tagEl.addEventListener('click', function(e) {
+    container.querySelectorAll('.tag').forEach(tagEl => {
+      tagEl.addEventListener('click', (e) => {
         e.stopPropagation();
         filterByTag(tagEl.dataset.tag);
       });
@@ -771,24 +904,23 @@
     currentFilterTag = normalizeTag(tag);
     document.getElementById('filter-tag-input').value = currentFilterTag;
     updateFilterTagsUI();
-    renderPosts(feedPostsCache, document.getElementById('feed-posts'), currentFilterTag);
+    renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
     setActiveTab(document.getElementById('tab-feed'));
-    showElement(document.getElementById('feed-section'));
+    showElement(feedSection);
   }
 
   function updateFilterTagsUI() {
-    const filterTagsDiv = document.getElementById('filter-tags');
     filterTagsDiv.innerHTML = '';
     
     const allTag = document.createElement('span');
     allTag.className = 'tag' + (currentFilterTag === '__all__' ? ' active-tag' : '');
     allTag.dataset.tag = '__all__';
     allTag.textContent = 'Все посты';
-    allTag.addEventListener('click', function() {
+    allTag.addEventListener('click', () => {
       currentFilterTag = '__all__';
       document.getElementById('filter-tag-input').value = '';
       updateFilterTagsUI();
-      renderPosts(feedPostsCache, document.getElementById('feed-posts'), '__all__');
+      renderPosts(feedPostsCache, feedPostsDiv, '__all__');
     });
     filterTagsDiv.appendChild(allTag);
 
@@ -802,15 +934,13 @@
     const tagStats = collectTagStats(feedPostsCache);
     const topTags = getTopTags(tagStats, 5);
 
-    topTags.forEach(function(tagEntry) {
-      const tag = tagEntry[0];
-      const count = tagEntry[1];
+    topTags.forEach(([tag, count]) => {
       if (tag !== currentFilterTag) {
         const tagEl = document.createElement('span');
         tagEl.className = 'tag';
         tagEl.dataset.tag = tag;
-        tagEl.innerHTML = '#' + tag + ' <span class="tag-count">' + count + '</span>';
-        tagEl.addEventListener('click', function() { filterByTag(tag); });
+        tagEl.innerHTML = `#${tag} <span class="tag-count">${count}</span>`;
+        tagEl.addEventListener('click', () => filterByTag(tag));
         filterTagsDiv.appendChild(tagEl);
       }
     });
@@ -821,7 +951,7 @@
       db.ref('posts').off('value');
     }
     
-    db.ref('posts').once('value', function(snapshot) {
+    db.ref('posts').once('value', snapshot => {
       feedPostsCache = snapshot.val();
       
       if (feedPostsCache) {
@@ -830,10 +960,10 @@
       }
       
       updateFilterTagsUI();
-      renderPosts(feedPostsCache, document.getElementById('feed-posts'), currentFilterTag);
+      renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
     });
     
-    db.ref('posts').on('value', function(snapshot) {
+    db.ref('posts').on('value', snapshot => {
       feedPostsCache = snapshot.val();
     });
     
@@ -842,71 +972,66 @@
 
   async function showUserProfileByUsername(username) {
     setActiveTab(document.getElementById('tab-profile'));
-    showElement(document.getElementById('profile-section'));
+    showElement(profileSection);
     const snap = await db.ref('users').orderByChild('username').equalTo(username).once('value');
     if (!snap.exists()) {
-      document.getElementById('profile-info').innerHTML = '<p>Пользователь не найден</p>';
-      document.getElementById('profile-posts').innerHTML = '';
+      profileInfoDiv.innerHTML = '<p>Пользователь не найден</p>';
+      profilePostsDiv.innerHTML = '';
       return;
     }
     let user = null;
-    snap.forEach(function(child) { user = child.val(); });
+    snap.forEach(child => { user = child.val(); });
     if (user) {
       const verified = await checkVerification(user.uid);
       const subscribersCount = await getSubscribersCount(user.uid);
       const isOwnProfile = currentUser && currentUser.uid === user.uid;
       const isUserSubscribed = !isOwnProfile && currentUser && await isSubscribed(currentUser.uid, user.uid);
-      const isPremium = user.eucalyptus || false;
       
-      document.getElementById('profile-info').innerHTML = 
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
-          '<div>' +
-            '<strong class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(user.name) + '</strong> • @' + escapeHtml(user.username) +
-            (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-            (verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '') +
-            '<div class="subscribers-count" style="cursor:pointer;" data-uid="' + user.uid + '">' +
-              '👥 ' + subscribersCount + ' подписчиков' +
-            '</div>' +
-          '</div>' +
-          (!isOwnProfile && currentUser ? 
-            '<button class="subscribe-btn ' + (isUserSubscribed ? 'subscribed' : '') + '" data-uid="' + user.uid + '" style="width:auto;padding:8px 16px;">' +
-              (isUserSubscribed ? '✓ Вы подписаны' : '+ Подписаться') +
-            '</button>' : ''
-          ) +
-        '</div>';
+      profileInfoDiv.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <strong>${escapeHtml(user.name)}</strong> • @${escapeHtml(user.username)}
+            ${verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : ''}
+            <div class="subscribers-count" style="cursor:pointer;" data-uid="${user.uid}">
+              👥 ${subscribersCount} подписчиков
+            </div>
+          </div>
+          ${!isOwnProfile && currentUser ? 
+            `<button class="subscribe-btn ${isUserSubscribed ? 'subscribed' : ''}" data-uid="${user.uid}" style="width:auto;padding:8px 16px;">
+              ${isUserSubscribed ? '✓ Вы подписаны' : '+ Подписаться'}
+            </button>` : ''
+          }
+        </div>
+      `;
 
-      const subscribersCountEl = document.getElementById('profile-info').querySelector('.subscribers-count');
+      const subscribersCountEl = profileInfoDiv.querySelector('.subscribers-count');
       if (subscribersCountEl) {
-        subscribersCountEl.addEventListener('click', function() { showSubscribersList(user.uid); });
+        subscribersCountEl.addEventListener('click', () => showSubscribersList(user.uid));
       }
 
-      const subscribeBtn = document.getElementById('profile-info').querySelector('.subscribe-btn');
+      const subscribeBtn = profileInfoDiv.querySelector('.subscribe-btn');
       if (subscribeBtn) {
-        subscribeBtn.addEventListener('click', async function() {
+        subscribeBtn.addEventListener('click', async () => {
           await toggleSubscription(user.uid);
           const newSubscribed = await isSubscribed(currentUser.uid, user.uid);
           subscribeBtn.textContent = newSubscribed ? '✓ Вы подписаны' : '+ Подписаться';
-          if (newSubscribed) {
-            subscribeBtn.classList.add('subscribed');
-          } else {
-            subscribeBtn.classList.remove('subscribed');
-          }
+          subscribeBtn.classList.toggle('subscribed', newSubscribed);
           const newCount = await getSubscribersCount(user.uid);
-          const countEl = document.getElementById('profile-info').querySelector('.subscribers-count');
-          if (countEl) countEl.innerHTML = '👥 ' + newCount + ' подписчиков';
+          const countEl = profileInfoDiv.querySelector('.subscribers-count');
+          if (countEl) countEl.innerHTML = `👥 ${newCount} подписчиков`;
         });
       }
 
-      loadPostsByUser(user.uid, document.getElementById('profile-posts'));
+      loadPostsByUser(user.uid, profilePostsDiv);
     }
   }
 
   async function showSubscribersList(uid) {
     const subscribersListDiv = document.getElementById('subscribers-list');
     subscribersListDiv.innerHTML = '<p>Загрузка...</p>';
-    showElement(document.getElementById('subscribers-modal'));
+    showElement(subscribersModal);
 
-    const snap = await db.ref('subscribers/' + uid).once('value');
+    const snap = await db.ref(`subscribers/${uid}`).once('value');
     const subscribers = snap.val();
     
     if (!subscribers) {
@@ -915,24 +1040,22 @@
     }
 
     subscribersListDiv.innerHTML = '';
-    for (let subId in subscribers) {
-      const sub = subscribers[subId];
-      const userSnap = await db.ref('users/' + sub.uid).once('value');
+    for (let sub of Object.values(subscribers)) {
+      const userSnap = await db.ref(`users/${sub.uid}`).once('value');
       const userData = userSnap.val();
       const verified = userData ? await checkVerification(userData.uid) : false;
-      const isPremium = userData && userData.eucalyptus ? true : false;
       
       const div = document.createElement('div');
       div.className = 'subscriber-item';
-      div.innerHTML = 
-        '<strong class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(userData ? userData.name : 'Пользователь') + '</strong> ' +
-        '@' + escapeHtml(userData ? userData.username : 'неизвестный') +
-        (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-        (verified ? ' <img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;">' : '') +
-        (currentUser && sub.uid === currentUser.uid ? ' <span style="color:var(--accent);">(вы)</span>' : '');
-      div.addEventListener('click', function() {
+      div.innerHTML = `
+        <strong>${escapeHtml(userData ? userData.name : 'Пользователь')}</strong> 
+        @${escapeHtml(userData ? userData.username : 'неизвестный')}
+        ${verified ? ' <img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;">' : ''}
+        ${currentUser && sub.uid === currentUser.uid ? ' <span style="color:var(--accent);">(вы)</span>' : ''}
+      `;
+      div.addEventListener('click', () => {
         if (userData) {
-          hideElement(document.getElementById('subscribers-modal'));
+          hideElement(subscribersModal);
           showUserProfileByUsername(userData.username);
         }
       });
@@ -941,17 +1064,17 @@
   }
 
   function loadPostsByUser(uid, container) {
-    db.ref('posts').orderByChild('userId').equalTo(uid).once('value', function(snapshot) {
+    db.ref('posts').orderByChild('userId').equalTo(uid).once('value', snapshot => {
       renderPosts(snapshot.val(), container, '__all__');
     });
   }
 
-  async function loadUsersList(searchQuery) {
+  async function loadUsersList(searchQuery = '') {
     const usersSnap = await db.ref('users').once('value');
     const users = usersSnap.val();
     
     if (!users) {
-      document.getElementById('users-list').innerHTML = '<p>Нет пользователей</p>';
+      usersListDiv.innerHTML = '<p>Нет пользователей</p>';
       return;
     }
 
@@ -959,163 +1082,135 @@
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      usersArray = usersArray.filter(function(user) {
-        return user.username.toLowerCase().indexOf(query) !== -1;
-      });
+      usersArray = usersArray.filter(user => 
+        user.username.toLowerCase().includes(query)
+      );
     }
 
     const usersWithSubscribers = await Promise.all(
-      usersArray.map(async function(user) {
+      usersArray.map(async (user) => {
         const subscribersCount = await getSubscribersCount(user.uid);
         const verified = await checkVerification(user.uid);
-        user.subscribersCount = subscribersCount;
-        user.verified = verified;
-        return user;
+        return { ...user, subscribersCount, verified };
       })
     );
 
-    usersWithSubscribers.sort(function(a, b) {
-      return b.subscribersCount - a.subscribersCount;
-    });
+    usersWithSubscribers.sort((a, b) => b.subscribersCount - a.subscribersCount);
 
-    const usersListDiv = document.getElementById('users-list');
     usersListDiv.innerHTML = '';
     
     if (usersWithSubscribers.length === 0) {
-      usersListDiv.innerHTML = searchQuery ? '<p>Пользователи не найдены</p>' : '<p>Нет пользователей</p>';
+      usersListDiv.innerHTML = searchQuery 
+        ? '<p>Пользователи не найдены</p>' 
+        : '<p>Нет пользователей</p>';
       return;
     }
 
-    usersWithSubscribers.forEach(function(user, index) {
+    usersWithSubscribers.forEach((user, index) => {
       const isOwnProfile = currentUser && currentUser.uid === user.uid;
-      const isPremium = user.eucalyptus || false;
       
       const div = document.createElement('div');
       div.style.cssText = 'padding:12px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
-      div.innerHTML = 
-        '<div style="flex:1;">' +
-          '<div style="display:flex;align-items:center;gap:8px;">' +
-            (index < 3 ? '<span class="user-rank">👑</span>' : '') +
-            '<span><strong class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(user.name) + '</strong> @' + escapeHtml(user.username) +
-            (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-            (user.verified ? '<img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;">' : '') + '</span>' +
-          '</div>' +
-          '<div class="subscribers-count" style="font-size:12px;">👥 ' + user.subscribersCount + ' подписчиков</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px;">' +
-          '<button class="view-profile-btn secondary" data-username="' + escapeHtml(user.username) + '" style="width:auto;padding:6px 12px;">Смотреть</button>' +
-          (!isOwnProfile && currentUser ? 
-            '<button class="subscribe-btn subscribe-list-btn" data-uid="' + user.uid + '" style="width:auto;padding:6px 12px;">...</button>' : ''
-          ) +
-        '</div>';
+      div.innerHTML = `
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${index < 3 ? '<span class="user-rank">👑</span>' : ''}
+            <span><strong>${escapeHtml(user.name)}</strong> @${escapeHtml(user.username)}
+            ${user.verified ? '<img src="verification.png" alt="✓" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;">' : ''}</span>
+          </div>
+          <div class="subscribers-count" style="font-size:12px;">👥 ${user.subscribersCount} подписчиков</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="view-profile-btn secondary" data-username="${escapeHtml(user.username)}" style="width:auto;padding:6px 12px;">Смотреть</button>
+          ${!isOwnProfile && currentUser ? 
+            `<button class="subscribe-btn subscribe-list-btn" data-uid="${user.uid}" style="width:auto;padding:6px 12px;">
+              ...
+            </button>` : ''
+          }
+        </div>
+      `;
       usersListDiv.appendChild(div);
     });
 
-    document.querySelectorAll('.view-profile-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        showUserProfileByUsername(btn.dataset.username);
-      });
+    document.querySelectorAll('.view-profile-btn').forEach(btn => {
+      btn.addEventListener('click', () => showUserProfileByUsername(btn.dataset.username));
     });
 
-    document.querySelectorAll('.subscribe-list-btn').forEach(async function(btn) {
+    document.querySelectorAll('.subscribe-list-btn').forEach(async (btn) => {
       const uid = btn.dataset.uid;
       const isUserSubscribed = await isSubscribed(currentUser.uid, uid);
       btn.textContent = isUserSubscribed ? '✓' : '+';
-      if (isUserSubscribed) {
-        btn.classList.add('subscribed');
-      } else {
-        btn.classList.remove('subscribed');
-      }
+      btn.classList.toggle('subscribed', isUserSubscribed);
       
-      btn.addEventListener('click', async function() {
+      btn.addEventListener('click', async () => {
         await toggleSubscription(uid);
         const newSubscribed = await isSubscribed(currentUser.uid, uid);
         btn.textContent = newSubscribed ? '✓' : '+';
-        if (newSubscribed) {
-          btn.classList.add('subscribed');
-        } else {
-          btn.classList.remove('subscribed');
-        }
+        btn.classList.toggle('subscribed', newSubscribed);
         loadUsersList(currentSearchQuery);
       });
     });
   }
 
   function setActiveTab(tab) {
-    ['tab-feed','tab-profile','tab-users'].forEach(function(id) {
-      document.getElementById(id).classList.remove('active');
-    });
+    ['tab-feed','tab-profile','tab-users'].forEach(id => document.getElementById(id).classList.remove('active'));
     tab.classList.add('active');
-    hideElement(document.getElementById('feed-section'));
-    hideElement(document.getElementById('profile-section'));
-    hideElement(document.getElementById('users-section'));
+    hideElement(feedSection);
+    hideElement(profileSection);
+    hideElement(usersSection);
   }
 
   async function onAuthSuccess(user) {
     currentUser = user;
-    currentUser.eucalyptus = await checkPremiumStatus(user.uid);
-    hideElement(document.getElementById('auth-screen'));
-    showElement(document.getElementById('main-screen'));
+    hideElement(authScreen);
+    showElement(mainScreen);
     const verified = await checkVerification(user.uid);
-    updateDisplayName();
+    currentUserDisplay.textContent = `🌿 ${user.name} (@${user.username})`;
     updateVerifiedBadge(verified);
 
-    ['login-username','login-password','reg-name','reg-username','reg-password'].forEach(function(id) {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    
+    ['login-username','login-password','reg-name','reg-username','reg-password'].forEach(id => document.getElementById(id).value = '');
     currentFilterTag = '__all__';
     loadFeedWithFilter();
     setActiveTab(document.getElementById('tab-feed'));
-    showElement(document.getElementById('feed-section'));
-    loadPostsByUser(currentUser.uid, document.getElementById('profile-posts'));
+    showElement(feedSection);
+    loadPostsByUser(currentUser.uid, profilePostsDiv);
     
     const subscribersCount = await getSubscribersCount(currentUser.uid);
-    const isPremium = currentUser.eucalyptus;
     const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
-    document.getElementById('profile-info').innerHTML = 
-      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div>' +
-          '<strong class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(currentUser.name) + '</strong> • @' + escapeHtml(currentUser.username) + badge +
-          (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-          '<div class="subscribers-count" style="cursor:pointer;" data-uid="' + currentUser.uid + '">' +
-            '👥 ' + subscribersCount + ' подписчиков' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    profileInfoDiv.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}
+          <div class="subscribers-count" style="cursor:pointer;" data-uid="${currentUser.uid}">
+            👥 ${subscribersCount} подписчиков
+          </div>
+        </div>
+      </div>
+    `;
 
-    const subscribersCountEl = document.getElementById('profile-info').querySelector('.subscribers-count');
+    const subscribersCountEl = profileInfoDiv.querySelector('.subscribers-count');
     if (subscribersCountEl) {
-      subscribersCountEl.addEventListener('click', function() { showSubscribersList(currentUser.uid); });
+      subscribersCountEl.addEventListener('click', () => showSubscribersList(currentUser.uid));
     }
 
-    loadUsersList('');
-    
-    if (!isPremium) {
-      setTimeout(function() { showElement(document.getElementById('subscription-modal')); }, 1000);
-    }
+    loadUsersList();
   }
 
   function logout() {
     removeFromLocalStorage();
     currentUser = null;
-    showElement(document.getElementById('auth-screen'));
-    hideElement(document.getElementById('main-screen'));
-    hideElement(document.getElementById('settings-modal'));
-    hideElement(document.getElementById('subscribers-modal'));
-    hideElement(document.getElementById('subscription-modal'));
+    showElement(authScreen);
+    hideElement(mainScreen);
+    hideElement(settingsModal);
+    hideElement(subscribersModal);
     db.ref('posts').off();
     db.ref('users').off();
-    document.getElementById('current-verified-badge').classList.add('hidden');
+    currentVerifiedBadge.classList.add('hidden');
     currentFilterTag = '__all__';
     currentSearchQuery = '';
     feedPostsCache = null;
     feedListenerActive = false;
-    selectedImageFile = null;
-    const userSearchInput = document.getElementById('user-search-input');
     if (userSearchInput) userSearchInput.value = '';
-    document.getElementById('image-preview-area').innerHTML = '';
   }
 
   async function tryAutoLogin() {
@@ -1132,116 +1227,53 @@
     return false;
   }
 
-  function showAuthError(msg) {
-    document.getElementById('auth-error').textContent = msg;
-    setTimeout(function() { document.getElementById('auth-error').textContent = ''; }, 5000);
-  }
-
-  document.getElementById('show-register').addEventListener('click', function(e) {
+  document.getElementById('show-register').addEventListener('click', e => {
     e.preventDefault();
     hideElement(document.getElementById('login-form'));
     showElement(document.getElementById('register-form'));
-    document.getElementById('auth-error').textContent = '';
+    authError.textContent = '';
   });
   
-  document.getElementById('show-login').addEventListener('click', function(e) {
+  document.getElementById('show-login').addEventListener('click', e => {
     e.preventDefault();
     showElement(document.getElementById('login-form'));
     hideElement(document.getElementById('register-form'));
-    document.getElementById('auth-error').textContent = '';
+    authError.textContent = '';
   });
 
-  document.getElementById('register-btn').addEventListener('click', async function() {
+  document.getElementById('register-btn').addEventListener('click', async () => {
     const name = document.getElementById('reg-name').value.trim();
     const username = document.getElementById('reg-username').value.trim();
     const password = document.getElementById('reg-password').value;
     if (!name || !username || !password) return showAuthError('Заполните все поля');
     if (password.length < 6) return showAuthError('Пароль минимум 6 символов');
     const result = await registerUser(name, username, password);
-    if (result.error) {
-      showAuthError(result.error);
-    } else {
-      onAuthSuccess(result.user);
-    }
+    result.error ? showAuthError(result.error) : onAuthSuccess(result.user);
   });
 
-  document.getElementById('login-btn').addEventListener('click', async function() {
+  document.getElementById('login-btn').addEventListener('click', async () => {
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
     const rememberMe = document.getElementById('remember-me').checked;
     if (!username || !password) return showAuthError('Введите юзернейм и пароль');
     const result = await loginUser(username, password, rememberMe);
-    if (result.error) {
-      showAuthError(result.error);
-    } else {
-      onAuthSuccess(result.user);
-    }
+    result.error ? showAuthError(result.error) : onAuthSuccess(result.user);
   });
 
   document.getElementById('logout-btn').addEventListener('click', logout);
 
-  document.getElementById('donate-btn').addEventListener('click', function() {
-    window.open('https://www.donationalerts.com/r/koalagram', '_blank');
-  });
-
-  document.getElementById('attach-image-btn').addEventListener('click', function() {
-    if (!currentUser || !currentUser.eucalyptus) {
-      alert('Только для Premium пользователей! Купите подписку Eucalyptus за 200 рублей.');
-      showElement(document.getElementById('subscription-modal'));
-      return;
-    }
-    document.getElementById('image-upload-input').click();
-  });
-
-  document.getElementById('image-upload-input').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 3 * 1024 * 1024) {
-      alert('Файл слишком большой. Максимальный размер: 3MB');
-      document.getElementById('image-upload-input').value = '';
-      return;
-    }
-    
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
-      alert('Только JPG и PNG файлы разрешены');
-      document.getElementById('image-upload-input').value = '';
-      return;
-    }
-    
-    selectedImageFile = file;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      document.getElementById('image-preview-area').innerHTML = 
-        '<div class="image-preview-container">' +
-          '<img src="' + ev.target.result + '" class="preview-image" alt="Preview">' +
-          '<button class="remove-image-btn" id="remove-image-btn">✕</button>' +
-        '</div>';
-      
-      document.getElementById('remove-image-btn').addEventListener('click', function() {
-        selectedImageFile = null;
-        document.getElementById('image-preview-area').innerHTML = '';
-        document.getElementById('image-upload-input').value = '';
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-
-  document.getElementById('send-post-btn').addEventListener('click', async function() {
-    const text = document.getElementById('new-post-text').value.trim();
-    if (!text && !selectedImageFile) {
-      alert('Введите текст сообщения или прикрепите картинку');
-      return;
-    }
-    const tagsString = document.getElementById('new-post-tags').value.trim();
+  document.getElementById('send-post-btn').addEventListener('click', async () => {
+    const text = newPostText.value.trim();
+    if (!text) return;
+    const tagsString = newPostTags.value.trim();
     const tags = parseTags(tagsString);
     await createPost(text, tags);
-    document.getElementById('new-post-text').value = '';
-    document.getElementById('new-post-tags').value = '';
+    newPostText.value = '';
+    newPostTags.value = '';
     document.getElementById('tag-suggestions').innerHTML = '';
   });
 
-  document.getElementById('add-tag-suggestion-btn').addEventListener('click', function() {
+  document.getElementById('add-tag-suggestion-btn').addEventListener('click', () => {
     const suggestionsDiv = document.getElementById('tag-suggestions');
     if (allPopularTags.size === 0) {
       suggestionsDiv.innerHTML = '<span style="font-size:12px;color:#6b8569;">Нет тегов для подсказок</span>';
@@ -1249,111 +1281,106 @@
     }
     
     const topTags = getTopTags(allPopularTags, 5);
-    suggestionsDiv.innerHTML = topTags.map(function(tagEntry) {
-      return '<span class="suggestion-tag" data-tag="' + tagEntry[0] + '" style="background: var(--bg-input); color: var(--text-secondary); padding: 4px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid var(--border);">#' + tagEntry[0] + ' (' + tagEntry[1] + ')</span>';
-    }).join('');
+    suggestionsDiv.innerHTML = topTags.map(([tag, count]) =>
+      `<span class="suggestion-tag" data-tag="${tag}">#${tag} (${count})</span>`
+    ).join('');
 
-    suggestionsDiv.querySelectorAll('.suggestion-tag').forEach(function(el) {
-      el.addEventListener('click', function() {
-        const currentTags = document.getElementById('new-post-tags').value.trim();
-        document.getElementById('new-post-tags').value = currentTags ? currentTags + ', ' + el.dataset.tag : el.dataset.tag;
+    suggestionsDiv.querySelectorAll('.suggestion-tag').forEach(el => {
+      el.addEventListener('click', () => {
+        const currentTags = newPostTags.value.trim();
+        newPostTags.value = currentTags ? currentTags + ', ' + el.dataset.tag : el.dataset.tag;
         suggestionsDiv.innerHTML = '';
       });
     });
   });
 
-  document.getElementById('filter-tag-btn').addEventListener('click', function() {
+  document.getElementById('filter-tag-btn').addEventListener('click', () => {
     const tag = document.getElementById('filter-tag-input').value.trim();
     if (tag) {
       currentFilterTag = normalizeTag(tag);
       updateFilterTagsUI();
-      renderPosts(feedPostsCache, document.getElementById('feed-posts'), currentFilterTag);
+      renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
       setActiveTab(document.getElementById('tab-feed'));
-      showElement(document.getElementById('feed-section'));
+      showElement(feedSection);
     }
   });
 
-  document.getElementById('clear-filter-btn').addEventListener('click', function() {
+  document.getElementById('clear-filter-btn').addEventListener('click', () => {
     currentFilterTag = '__all__';
     document.getElementById('filter-tag-input').value = '';
     updateFilterTagsUI();
-    renderPosts(feedPostsCache, document.getElementById('feed-posts'), '__all__');
+    renderPosts(feedPostsCache, feedPostsDiv, '__all__');
   });
 
-  document.getElementById('filter-tag-input').addEventListener('keypress', function(e) {
+  document.getElementById('filter-tag-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') document.getElementById('filter-tag-btn').click();
   });
 
-  document.getElementById('user-search-input').addEventListener('input', function(e) {
+  userSearchInput.addEventListener('input', (e) => {
     currentSearchQuery = e.target.value.trim();
     loadUsersList(currentSearchQuery);
   });
 
-  document.getElementById('tab-feed').addEventListener('click', function() {
+  document.getElementById('tab-feed').addEventListener('click', () => {
     setActiveTab(document.getElementById('tab-feed'));
-    showElement(document.getElementById('feed-section'));
-    renderPosts(feedPostsCache, document.getElementById('feed-posts'), currentFilterTag);
+    showElement(feedSection);
+    renderPosts(feedPostsCache, feedPostsDiv, currentFilterTag);
   });
   
-  document.getElementById('tab-profile').addEventListener('click', async function() {
+  document.getElementById('tab-profile').addEventListener('click', async () => {
     setActiveTab(document.getElementById('tab-profile'));
-    showElement(document.getElementById('profile-section'));
+    showElement(profileSection);
     if (currentUser) {
       const verified = await checkVerification(currentUser.uid);
       const subscribersCount = await getSubscribersCount(currentUser.uid);
-      const isPremium = currentUser.eucalyptus;
       const badge = verified ? ' <img src="verification.png" alt="✓" style="width:16px;height:16px;vertical-align:middle;">' : '';
-      document.getElementById('profile-info').innerHTML = 
-        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-          '<div>' +
-            '<strong class="' + (isPremium ? 'premium' : '') + '">' + escapeHtml(currentUser.name) + '</strong> • @' + escapeHtml(currentUser.username) + badge +
-            (isPremium ? '<span class="premium-badge">PREMIUM</span>' : '') +
-            '<div class="subscribers-count" style="cursor:pointer;" data-uid="' + currentUser.uid + '">' +
-              '👥 ' + subscribersCount + ' подписчиков' +
-            '</div>' +
-          '</div>' +
-        '</div>';
+      profileInfoDiv.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <strong>${escapeHtml(currentUser.name)}</strong> • @${escapeHtml(currentUser.username)}${badge}
+            <div class="subscribers-count" style="cursor:pointer;" data-uid="${currentUser.uid}">
+              👥 ${subscribersCount} подписчиков
+            </div>
+          </div>
+        </div>
+      `;
       
-      const subscribersCountEl = document.getElementById('profile-info').querySelector('.subscribers-count');
+      const subscribersCountEl = profileInfoDiv.querySelector('.subscribers-count');
       if (subscribersCountEl) {
-        subscribersCountEl.addEventListener('click', function() { showSubscribersList(currentUser.uid); });
+        subscribersCountEl.addEventListener('click', () => showSubscribersList(currentUser.uid));
       }
       
-      loadPostsByUser(currentUser.uid, document.getElementById('profile-posts'));
+      loadPostsByUser(currentUser.uid, profilePostsDiv);
     }
   });
   
-  document.getElementById('tab-users').addEventListener('click', function() {
+  document.getElementById('tab-users').addEventListener('click', () => {
     setActiveTab(document.getElementById('tab-users'));
-    showElement(document.getElementById('users-section'));
-    currentSearchQuery = document.getElementById('user-search-input').value.trim();
+    showElement(usersSection);
+    currentSearchQuery = userSearchInput.value.trim();
     loadUsersList(currentSearchQuery);
   });
 
-  document.getElementById('settings-btn').addEventListener('click', function() {
+  document.getElementById('settings-btn').addEventListener('click', () => {
     document.getElementById('settings-name').value = currentUser.name;
     document.getElementById('settings-username').value = currentUser.username;
     document.getElementById('settings-old-password').value = '';
     document.getElementById('settings-new-password').value = '';
-    ['name-status','username-status','password-status'].forEach(function(id) {
-      document.getElementById(id).textContent = '';
-    });
-    showElement(document.getElementById('settings-modal'));
+    ['name-status','username-status','password-status'].forEach(id => document.getElementById(id).textContent = '');
+    showElement(settingsModal);
   });
 
-  document.getElementById('close-settings-btn').addEventListener('click', function() {
-    hideElement(document.getElementById('settings-modal'));
-  });
+  document.getElementById('close-settings-btn').addEventListener('click', () => hideElement(settingsModal));
 
-  document.getElementById('save-name-btn').addEventListener('click', async function() {
+  document.getElementById('save-name-btn').addEventListener('click', async () => {
     const newName = document.getElementById('settings-name').value.trim();
     if (!newName) return;
     await updateUserName(newName);
     document.getElementById('name-status').textContent = 'Имя обновлено!';
-    updateDisplayName();
+    currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
   });
 
-  document.getElementById('save-username-btn').addEventListener('click', async function() {
+  document.getElementById('save-username-btn').addEventListener('click', async () => {
     const newUsername = document.getElementById('settings-username').value.trim();
     if (!newUsername) return;
     const result = await updateUsername(newUsername);
@@ -1364,11 +1391,11 @@
     } else {
       statusEl.textContent = 'Юзернейм обновлён!';
       statusEl.className = 'success';
-      updateDisplayName();
+      currentUserDisplay.textContent = `🌿 ${currentUser.name} (@${currentUser.username})`;
     }
   });
 
-  document.getElementById('save-password-btn').addEventListener('click', async function() {
+  document.getElementById('save-password-btn').addEventListener('click', async () => {
     const oldPass = document.getElementById('settings-old-password').value;
     const newPass = document.getElementById('settings-new-password').value;
     if (!oldPass || !newPass) return;
@@ -1385,37 +1412,26 @@
     }
   });
 
-  document.getElementById('close-subscribers-btn').addEventListener('click', function() {
-    hideElement(document.getElementById('subscribers-modal'));
+  document.getElementById('close-subscribers-btn').addEventListener('click', () => hideElement(subscribersModal));
+
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) hideElement(settingsModal);
   });
 
-  document.getElementById('close-subscription-modal').addEventListener('click', function() {
-    hideElement(document.getElementById('subscription-modal'));
+  subscribersModal.addEventListener('click', (e) => {
+    if (e.target === subscribersModal) hideElement(subscribersModal);
   });
 
-  document.getElementById('settings-modal').addEventListener('click', function(e) {
-    if (e.target === document.getElementById('settings-modal')) {
-      hideElement(document.getElementById('settings-modal'));
-    }
-  });
+  function showAuthError(msg) {
+    authError.textContent = msg;
+    setTimeout(() => { authError.textContent = ''; }, 5000);
+  }
 
-  document.getElementById('subscribers-modal').addEventListener('click', function(e) {
-    if (e.target === document.getElementById('subscribers-modal')) {
-      hideElement(document.getElementById('subscribers-modal'));
-    }
-  });
-
-  document.getElementById('subscription-modal').addEventListener('click', function(e) {
-    if (e.target === document.getElementById('subscription-modal')) {
-      hideElement(document.getElementById('subscription-modal'));
-    }
-  });
-
-  window.addEventListener('load', async function() {
+  window.addEventListener('load', async () => {
     const autoLoggedIn = await tryAutoLogin();
     if (!autoLoggedIn) {
-      showElement(document.getElementById('auth-screen'));
-      hideElement(document.getElementById('main-screen'));
+      showElement(authScreen);
+      hideElement(mainScreen);
     }
   });
 </script>
