@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>🐨Koalagram🐨</title>
+  <title>Eucalyptus • Мессенджер с тегами и картинками</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
@@ -180,6 +180,23 @@
       color: var(--text-primary);
     }
 
+    .post-image {
+      margin: 12px 0;
+      max-width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--bg-primary);
+      cursor: pointer;
+    }
+
+    .post-image img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 16px;
+      display: block;
+    }
+
     .tags-container {
       display: flex;
       flex-wrap: wrap;
@@ -232,6 +249,56 @@
       width: auto;
       padding: 10px 16px;
       font-size: 14px;
+    }
+
+    .image-upload-area {
+      margin-top: 12px;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg-input);
+    }
+
+    .image-upload-area:hover {
+      border-color: var(--accent);
+      background: var(--bg-card);
+    }
+
+    .image-preview {
+      margin-top: 12px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 12px;
+    }
+
+    .remove-image-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--error);
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .image-preview-container {
+      display: inline-block;
+      position: relative;
     }
 
     .like-btn {
@@ -327,7 +394,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -341,6 +408,17 @@
       width: 90%;
       max-width: 450px;
       border: 2px solid var(--border);
+    }
+
+    .image-viewer-modal .modal {
+      max-width: 90vw;
+      padding: 20px;
+    }
+
+    .image-viewer-modal img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 12px;
     }
 
     .tag-suggestions {
@@ -411,6 +489,16 @@
       font-size: 10px;
       opacity: 0.7;
       margin-left: 2px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .image-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -486,6 +574,15 @@
           <input type="text" id="new-post-tags" placeholder="Теги через запятую (например: природа, эвкалипт)" style="font-size: 14px;">
           <button id="add-tag-suggestion-btn" type="button" class="secondary" style="width: auto; padding: 10px 14px;">💡</button>
         </div>
+        
+        <!-- Image Upload Area -->
+        <div id="image-upload-area" class="image-upload-area">
+          📷 Нажмите или перетащите изображение (до 1 МБ)
+          <input type="file" id="image-input" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input">
+        </div>
+        <div id="image-preview" class="image-preview" style="display: none;"></div>
+        <div id="image-error" class="error" style="font-size: 12px; margin-top: 5px;"></div>
+        
         <div id="tag-suggestions" class="tag-suggestions"></div>
         <button id="send-post-btn" style="margin-top: 12px;">Опубликовать</button>
       </div>
@@ -539,6 +636,13 @@
       <button id="close-subscribers-btn" class="secondary" style="margin-top: 12px;">Закрыть</button>
     </div>
   </div>
+
+  <div id="image-viewer-modal" class="modal-overlay image-viewer-modal hidden">
+    <div class="modal">
+      <img id="viewer-image" src="" alt="Просмотр изображения">
+      <button id="close-viewer-btn" class="secondary" style="margin-top: 16px;">Закрыть</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -561,6 +665,7 @@
   let currentSearchQuery = '';
   let feedPostsCache = null;
   let feedListenerActive = false;
+  let currentImageBase64 = null;
 
   const authScreen = document.getElementById('auth-screen');
   const mainScreen = document.getElementById('main-screen');
@@ -580,6 +685,10 @@
   const newPostTags = document.getElementById('new-post-tags');
   const filterTagsDiv = document.getElementById('filter-tags');
   const userSearchInput = document.getElementById('user-search-input');
+  const imageInput = document.getElementById('image-input');
+  const imageUploadArea = document.getElementById('image-upload-area');
+  const imagePreview = document.getElementById('image-preview');
+  const imageError = document.getElementById('image-error');
 
   const VALID_USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
   const VALID_TAG_REGEX = /^[a-zA-Zа-яА-Я0-9_ёЁ]+$/;
@@ -629,6 +738,55 @@
   function getFromLocalStorage() {
     const data = localStorage.getItem('koalagram_user');
     return data ? JSON.parse(data) : null;
+  }
+
+  async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      if (file.size > 1024 * 1024) {
+        reject(new Error('Файл превышает 1 МБ'));
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDimension = 1024;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          let quality = 0.8;
+          let result = canvas.toDataURL('image/jpeg', quality);
+          
+          while (result.length > 800 * 1024 && quality > 0.3) {
+            quality -= 0.1;
+            result = canvas.toDataURL('image/jpeg', quality);
+          }
+          
+          resolve(result);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   async function checkVerification(uid) {
@@ -738,7 +896,7 @@
     return { success: true };
   }
 
-  async function createPost(text, tagsArray) {
+  async function createPost(text, tagsArray, imageBase64 = null) {
     const postRef = db.ref('posts').push();
     const post = {
       id: postRef.key,
@@ -750,6 +908,11 @@
       timestamp: firebase.database.ServerValue.TIMESTAMP,
       likes: {}
     };
+    
+    if (imageBase64) {
+      post.image = imageBase64;
+    }
+    
     await postRef.set(post);
     loadFeedWithFilter();
   }
@@ -855,6 +1018,10 @@
       const tagsHtml = post.tags && post.tags.length > 0
         ? post.tags.map(tag => `<span class="tag" data-tag="${escapeHtml(tag)}" onclick="event.stopPropagation();">#${escapeHtml(tag)}</span>`).join('')
         : '';
+      
+      const imageHtml = post.image 
+        ? `<div class="post-image" data-image="${escapeHtml(post.image)}"><img src="${escapeHtml(post.image)}" alt="Post image" loading="lazy"></div>`
+        : '';
 
       postDiv.innerHTML = `
         ${isPopular ? '<div class="popular-badge">🔥 Популярное сегодня</div>' : ''}
@@ -866,6 +1033,7 @@
           <span>${escapeHtml(post.userName || '')}</span>
         </div>
         <div class="post-text">${escapeHtml(post.text)}</div>
+        ${imageHtml}
         ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <button class="like-btn ${likedByMe ? 'liked' : ''}" data-post-id="${id}">❤️ ${likesCount}</button>
@@ -896,6 +1064,18 @@
       tagEl.addEventListener('click', (e) => {
         e.stopPropagation();
         filterByTag(tagEl.dataset.tag);
+      });
+    });
+    
+    container.querySelectorAll('.post-image').forEach(imgContainer => {
+      imgContainer.addEventListener('click', () => {
+        const imageSrc = imgContainer.dataset.image;
+        if (imageSrc) {
+          const viewer = document.getElementById('image-viewer-modal');
+          const viewerImg = document.getElementById('viewer-image');
+          viewerImg.src = imageSrc;
+          showElement(viewer);
+        }
       });
     });
   }
@@ -1160,6 +1340,85 @@
     hideElement(usersSection);
   }
 
+  function setupImageUpload() {
+    imageUploadArea.addEventListener('click', () => {
+      imageInput.click();
+    });
+    
+    imageUploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      imageUploadArea.style.borderColor = 'var(--accent)';
+      imageUploadArea.style.background = 'var(--bg-card)';
+    });
+    
+    imageUploadArea.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      imageUploadArea.style.borderColor = 'var(--border)';
+      imageUploadArea.style.background = 'var(--bg-input)';
+    });
+    
+    imageUploadArea.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      imageUploadArea.style.borderColor = 'var(--border)';
+      imageUploadArea.style.background = 'var(--bg-input)';
+      
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        await processImageFile(file);
+      } else {
+        imageError.textContent = 'Пожалуйста, выберите изображение';
+        setTimeout(() => { imageError.textContent = ''; }, 3000);
+      }
+    });
+    
+    imageInput.addEventListener('change', async (e) => {
+      if (e.target.files && e.target.files[0]) {
+        await processImageFile(e.target.files[0]);
+      }
+    });
+  }
+  
+  async function processImageFile(file) {
+    imageError.textContent = '';
+    
+    if (file.size > 1024 * 1024) {
+      imageError.textContent = 'Изображение не должно превышать 1 МБ';
+      setTimeout(() => { imageError.textContent = ''; }, 3000);
+      return;
+    }
+    
+    try {
+      const compressedImage = await compressImage(file);
+      currentImageBase64 = compressedImage;
+      
+      imagePreview.innerHTML = `
+        <div class="image-preview-container">
+          <img src="${compressedImage}" alt="Preview">
+          <div class="remove-image-btn" id="remove-image">✕</div>
+        </div>
+      `;
+      imagePreview.style.display = 'block';
+      
+      document.getElementById('remove-image').addEventListener('click', () => {
+        currentImageBase64 = null;
+        imagePreview.innerHTML = '';
+        imagePreview.style.display = 'none';
+        imageInput.value = '';
+      });
+    } catch (error) {
+      imageError.textContent = error.message || 'Ошибка при обработке изображения';
+      setTimeout(() => { imageError.textContent = ''; }, 3000);
+    }
+  }
+  
+  function clearImagePreview() {
+    currentImageBase64 = null;
+    imagePreview.innerHTML = '';
+    imagePreview.style.display = 'none';
+    imageInput.value = '';
+    imageError.textContent = '';
+  }
+
   async function onAuthSuccess(user) {
     currentUser = user;
     hideElement(authScreen);
@@ -1264,12 +1523,20 @@
 
   document.getElementById('send-post-btn').addEventListener('click', async () => {
     const text = newPostText.value.trim();
-    if (!text) return;
+    if (!text && !currentImageBase64) {
+      imageError.textContent = 'Напишите текст или добавьте изображение';
+      setTimeout(() => { imageError.textContent = ''; }, 3000);
+      return;
+    }
+    
     const tagsString = newPostTags.value.trim();
     const tags = parseTags(tagsString);
-    await createPost(text, tags);
+    
+    await createPost(text || '', tags, currentImageBase64);
+    
     newPostText.value = '';
     newPostTags.value = '';
+    clearImagePreview();
     document.getElementById('tag-suggestions').innerHTML = '';
   });
 
@@ -1414,12 +1681,22 @@
 
   document.getElementById('close-subscribers-btn').addEventListener('click', () => hideElement(subscribersModal));
 
+  document.getElementById('close-viewer-btn').addEventListener('click', () => {
+    hideElement(document.getElementById('image-viewer-modal'));
+  });
+
   settingsModal.addEventListener('click', (e) => {
     if (e.target === settingsModal) hideElement(settingsModal);
   });
 
   subscribersModal.addEventListener('click', (e) => {
     if (e.target === subscribersModal) hideElement(subscribersModal);
+  });
+  
+  document.getElementById('image-viewer-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('image-viewer-modal')) {
+      hideElement(document.getElementById('image-viewer-modal'));
+    }
   });
 
   function showAuthError(msg) {
@@ -1428,6 +1705,7 @@
   }
 
   window.addEventListener('load', async () => {
+    setupImageUpload();
     const autoLoggedIn = await tryAutoLogin();
     if (!autoLoggedIn) {
       showElement(authScreen);
